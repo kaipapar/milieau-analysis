@@ -2,6 +2,10 @@ mil-env/
 data/
 cache/
 *.html
+*.json
+# qgis project files
+*.qgz 
+
 # The below is from https://github.com/github/gitignore/blob/main/Python.gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,3 +1,7 @@
+""" 
+https://pythongis.org/part2/chapter-09/nb/01-retrieving-data-from-wfs.html
+ © Copyright 2020-2025, Henrikki Tenkanen, Vuokko Heikinheimo, David Whipp. 
+ """
 import geopandas as gpd
 import requests
 import geojson

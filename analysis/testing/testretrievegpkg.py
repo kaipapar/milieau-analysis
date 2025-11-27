@@ -1,3 +1,8 @@
+""" 
+https://pythongis.org/
+ © Copyright 2020-2025, Henrikki Tenkanen, Vuokko Heikinheimo, David Whipp. 
+ Also some edits by Karri Korsu
+ """
 import geopandas as gpd
 import osmnx as ox
 from subprocess import check_call

@@ -1,4 +1,7 @@
-
+""" 
+Doesn't work as is !
+Karri Korsu 2025
+ """
 import geopandas as gpd
 from shapely import make_valid
 

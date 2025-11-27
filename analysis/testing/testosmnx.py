@@ -1,3 +1,7 @@
+""" 
+https://pythongis.org/part2/chapter-09/nb/00-retrieving-osm-data.html
+ © Copyright 2020-2025, Henrikki Tenkanen, Vuokko Heikinheimo, David Whipp. 
+ """
 import osmnx as ox
 from subprocess import check_call
 
