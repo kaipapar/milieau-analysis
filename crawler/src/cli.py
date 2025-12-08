@@ -15,11 +15,12 @@ def argparser(args):
                         epilog='Text at the bottom of help')
     
     parser.add_argument('url')           # positional argument
+    
     """ 
     parser.add_argument('-c',)      # option that takes a value
     parser.add_argument('-v', '--verbose',
                     action='store_true')  # on/off flag """
     
-    args = parser.parse_args()
-    print(args.url)
-    return args
+    arglist = parser.parse_args(args)
+    print(arglist.url)
+    return arglist
