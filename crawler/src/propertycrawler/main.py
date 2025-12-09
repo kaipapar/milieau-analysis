@@ -7,7 +7,7 @@
 @Desc: None
 '''
 from sys import argv
-from propertysite import Remax
+from remax import Remax
 from cli import argparser
 
 if __name__ == "__main__":
