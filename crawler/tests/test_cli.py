@@ -8,7 +8,7 @@
 '''
 
 import pytest
-import src.cli as cli
+import propertycrawler.cli as cli
 
 class TestArgparser:
     well_formed_remax_url= "https://remax.fi/myytavat-asunnot/turku/"

@@ -7,8 +7,8 @@
 @Desc: None
 '''
 from sys import argv
-from src.propertysite import Remax
-from src.cli import argparser
+from propertysite import Remax
+from cli import argparser
 
 if __name__ == "__main__":
     args = argparser(argv[1:])

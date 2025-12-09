@@ -8,7 +8,7 @@
 '''
 
 import pytest
-from src.propertysite import Remax
+from propertycrawler.propertysite import Remax
 
 class TestRemax:
     """ creation
