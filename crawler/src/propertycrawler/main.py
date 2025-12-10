@@ -9,14 +9,18 @@
 from sys import argv
 from remax import Remax
 from cli import argparser
+from datahandler import IO
 
 if __name__ == "__main__":
     args = argparser(argv[1:])
 
-    if 1:
-        remax = Remax()
-        remax.url = args.url
-        remax.listing_append(remax.Listing())
+    remax = Remax()
+    remax.url = args.url
+    io = IO()
+    listings = io.get_json("data/property_search_LINEAR.php.html")
+    print(listings)
+
+
 
         
 

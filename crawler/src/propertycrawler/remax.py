@@ -9,10 +9,11 @@
 
 from .propertysite import PropertySite
 from .constants import REMAX_ATTR_KEYS as ATTR_KEYS
+from .parser import JsonParser
 
 class Remax(PropertySite):
     url="https://remax.fi/myytavat-asunnot/"
-    
+    php_query_url = "https://remax.fi/wp-content/themes/blocksy-child/property_search_LINEAR.php"
     def __init__(self):
         super().__init__()
     
@@ -27,6 +28,15 @@ class Remax(PropertySite):
 
     def next_page(self):
         pass
+    '''
+    @property
+    def listing_ids(self):
+        return self.listing_ids
+    
+    @listing_ids.setter
+    def listing_ids(self,value:dict):
+        """ value = json style dictionary """
+        self.listing_ids.add(value)#JsonParser.get_ids(value)'''
 
     def listing_append(self, listing=None):
         if listing is None:
