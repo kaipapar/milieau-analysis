@@ -15,13 +15,16 @@ if __name__ == "__main__":
     args = argparser(argv[1:])
 
     remax = Remax()
-    remax.url = args.url
+    remax.php_query_url = args.url
     io = IO()
     listings = io.get_json("data/property_search_LINEAR.php.html")
     print(listings)
     json = JsonParser(listings)
     print('getting ids')
-    print(json.get_ids())
+    ids = json.get_ids()
+    remax.populate_listing_list(ids)
+    print(remax.listing_list)
+
 
 
 
