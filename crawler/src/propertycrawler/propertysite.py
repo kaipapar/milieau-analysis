@@ -10,11 +10,12 @@
 import abc
 
 class PropertySite(abc.ABC):
-    """ Abstract base class which houses an outline on how to implement a PropertySite class"""
+    """ Abstract base class which houses an outline on how to implement a PropertySite class """
     url = ""            # baseurl for the listinglist page
     next_page = ""      # next page button html
+    php_query_url=""    # where the listinglist is accessed
     def __init__(self):
-        self.listing_list = list
+        self.listing_list = []
         
     class Listing(abc.ABC):
         """ Information about specific listings """
@@ -28,10 +29,18 @@ class PropertySite(abc.ABC):
             self.id = id        # url + id -> listing location on website
             self.attr_dict = attr_dict # listing attributes with title and value
 
-        def attr_key_html(self,index):
-            return f"{type(self).label_value_tag[0]}{type(self).attr_keys[index]}{type(self).label_value_tag[1]}"
+        def attr_label_html(self,index):
+            """ returns HTML element with list tag and list label  """
+            return type(self).label_value_tag[0]+type(self).attr_keys[index]+"</"+type(self).label_value_tag[0][1:4]+">"
 
-    def listing_append():
+        def attr_value_html(self,index):
+            """ returns HTML element with list tag and list value """
+            pass
+
+    def next_page(self):
+        raise NotImplementedError("next page method not implemented")
+
+    def listing_append(self):
         raise NotImplementedError("listing_append() not implemented")
 
     

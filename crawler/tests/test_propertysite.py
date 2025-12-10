@@ -50,11 +50,7 @@ class TestRemax:
             yield new_listing
 
         def test_html_formatting(self, listing):
-            html_tuple = ("<div>","</div>")
-            attr = "Pinta-ala"
-            expectation = f"{html_tuple[0]}{attr}{html_tuple[1]}"
-            listing.attr_html = html_tuple
-            listing.attr_keys = ["something", attr]
-
-            result = listing.attr_key_html(0)
+            attr_label = "Asuintilojen pinta-ala:"
+            expectation = f'<div class="col-12 col-md-5 list-label">{attr_label}</div>'
+            result = listing.attr_label_html(3)
             assert result == expectation

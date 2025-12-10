@@ -25,6 +25,8 @@ class Remax(PropertySite):
         def __init__(self, id: int, attr_dict: dict):
             super().__init__(id=id, attr_dict=attr_dict)
 
+    def next_page(self):
+        pass
 
     def listing_append(self, listing=None):
         if listing is None:
