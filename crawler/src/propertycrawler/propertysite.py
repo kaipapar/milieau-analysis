@@ -15,7 +15,7 @@ class PropertySite(abc.ABC):
     next_page = ""      # next page button html
     php_query_url=""    # where the listinglist is accessed
     def __init__(self):
-        self.listing_ids = set()
+        self._listing_ids = set()
         self.listing_list = []
         
     class Listing(abc.ABC):
@@ -37,15 +37,15 @@ class PropertySite(abc.ABC):
         def attr_value_html(self,index):
             """ returns HTML element with list tag and list value """
             pass
-        """ 
+        
     @property
     def listing_ids(self):
-        return self.listing_ids
+        return self._listing_ids
 
     @listing_ids.setter
     def listing_ids(self, value):
-        self.listing_ids = value
- """
+        self._listing_ids = value
+ 
     def next_page(self):
         raise NotImplementedError("next page method not implemented")
 

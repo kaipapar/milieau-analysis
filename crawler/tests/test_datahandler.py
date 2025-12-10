@@ -15,7 +15,8 @@ class TestDH:
     def filepath(self):
         yield "data/property_search_LINEAR.php.html"
 
-    def test_json_loads_as_dict(self,filepath):
+    def test_json_loads_as_list_of_dicts(self,filepath):
         io = IO()
         json = io.get_json(filepath)
-        assert type(json) == dict
+        assert type(json) == list
+        assert type(json[0]) == dict

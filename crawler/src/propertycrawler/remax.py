@@ -7,9 +7,9 @@
 @Desc: None
 '''
 
-from .propertysite import PropertySite
-from .constants import REMAX_ATTR_KEYS as ATTR_KEYS
-from .parser import JsonParser
+from propertysite import PropertySite
+from constants import REMAX_ATTR_KEYS as ATTR_KEYS
+from parser import JsonParser
 
 class Remax(PropertySite):
     url="https://remax.fi/myytavat-asunnot/"
@@ -28,15 +28,16 @@ class Remax(PropertySite):
 
     def next_page(self):
         pass
-    '''
+
     @property
     def listing_ids(self):
-        return self.listing_ids
+        return self._listing_ids
     
     @listing_ids.setter
-    def listing_ids(self,value:dict):
-        """ value = json style dictionary """
-        self.listing_ids.add(value)#JsonParser.get_ids(value)'''
+    def listing_ids(self,value:list):
+        """ adds 'value' to listing_ids """
+        #self._listing_ids.add(value)#JsonParser.get_ids(value)
+        self._listing_ids |= value
 
     def listing_append(self, listing=None):
         if listing is None:

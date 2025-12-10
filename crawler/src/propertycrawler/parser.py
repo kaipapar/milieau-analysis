@@ -7,18 +7,23 @@
 @Desc: None
 '''
 import json
-from .datahandler import IO
+from datahandler import IO
 class HtmlParser:
     """ For parsing propertylisting html """
     pass
 class JsonParser:
     """ For parsing remax php search response """
-    def get_id(self, line) -> int:
-        pass
-    def get_ids(self,json) -> set:
-        l = len(json)
+    def __init__(self,json_list):
+        self.json_list = json_list
+    
+    def _get_id(self, index, id = "identifier") -> int:
+        return self.json_list[index][id]
+
+    def get_ids(self) -> set:
+        l = len(self.json_list)
         i = 0
         ids = set()
         while (i < l):
-            ids.add(self.get_id(i))
+            ids.add(self._get_id(i))
+            i+=1
         return ids

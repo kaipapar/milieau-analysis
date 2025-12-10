@@ -12,4 +12,4 @@ class IO:
     def get_json(self, path):
         with open(path,'r') as file:
             d = json.load(file) 
-        return d[0]
+        return d

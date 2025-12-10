@@ -10,7 +10,7 @@ from sys import argv
 from remax import Remax
 from cli import argparser
 from datahandler import IO
-
+from parser import JsonParser
 if __name__ == "__main__":
     args = argparser(argv[1:])
 
@@ -19,6 +19,11 @@ if __name__ == "__main__":
     io = IO()
     listings = io.get_json("data/property_search_LINEAR.php.html")
     print(listings)
+    json = JsonParser(listings)
+    print('getting ids')
+    print(json.get_ids())
+
+
 
 
 
