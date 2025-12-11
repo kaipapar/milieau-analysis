@@ -15,30 +15,32 @@ import os
 class Crawler:
     def get_listing_page(self, base_url: str, id: str, filepath="./data/listings/"):
         """ download listing page html """
-        if filepath[-5:] != ".html":
+        if (filepath[-5:] != ".html"):
             warnings.warn("method: get_listing_page: Improper filepath detected! Resorting to default")
-            warnings.showwarning("Bad Filepath, using default")
+            #warnings.showwarning("Bad Filepath, using default")
             filepath = f"./listing_"+id+".html" # relative path not safe to run  anywhere
         subprocess.run(['wget', '-O', f'{filepath}', '--backups', f'{base_url+id}'])
 
     def get_listings(self, obj: PropertySite):
         for listing in obj.listings:
             self.get_listing_page(listing.url, listing.id, f"./data/listings/{listing.id}.html")
-
-    def get_listing_list_page(self, url: str, filepath) -> bool:
+    ''' #doesn't work, something to do with subprocesses. Always returns true
+    def get_listing_list_page(self, url: str, filepath="./data/listings/") -> bool:
         """ download listing list page data as json with wget """
-        if filepath[-5:] != ".html":
+        if (filepath[-5:] != ".html"): # fails if filepath is less than 5 characters
             warnings.warn("method: get_listing_page: Improper filepath detected! Resorting to default")
-            warnings.showwarning("Bad Filepath, using default")
-            filepath = f"./listing_"+id+".html" # relative path not safe to run  anywhere
+            #warnings.showwarning("Bad Filepath, using default")
+            filepath = f"./listing_list"+".html" # relative path not safe to run  anywhere
 
         #subprocess.run(['wget', '-O', f'{filepath}', '--backups', f'{url+id}']) # subprocess.run() should way for result before moving onto next line.
         
-        result = subprocess.run(['wget', '-q', '-O', '-', f'{url}','|', 'tee', f'{filepath}'])
-        if (result.stdout == "[]"): # if the result is empty
+        result = subprocess.Popen(['wget', '-q', '-O', '-', f'{url}'], stdout=subprocess.PIPE)
+        to_file = subprocess.check_output(('tee', f'{filepath}'), stdin=result.stdout)
+        #result.wait()
+        if (len(result.stdout) < 10): # if the result is empty #doesnt work
             return False
         else:
-            return True
+            return True'''
 
     def is_empty(self, filepath) -> bool:
         threshold = 100 #in bytes, it seems a empty file returned by wget is 2 bytes and a full one ~13k bytes

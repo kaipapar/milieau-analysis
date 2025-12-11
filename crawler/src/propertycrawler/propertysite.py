@@ -15,8 +15,8 @@ class PropertySite(abc.ABC):
     next_page = ""      # next page button html
     php_query_url=""    # where the listinglist is accessed
     def __init__(self):
-        self._listing_ids: set[int] = {}
-        self.listings: set[PropertySite.Listing] = {}
+        self._listing_ids: set[int] = set()
+        self.listings: set[PropertySite.Listing] = set()
         
     class Listing(abc.ABC):
         """ Information about specific listings """
