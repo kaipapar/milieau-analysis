@@ -16,7 +16,7 @@ class PropertySite(abc.ABC):
     php_query_url=""    # where the listinglist is accessed
     def __init__(self):
         self._listing_ids: set[int] = {}
-        self.listing_list: list[PropertySite.Listing] = []
+        self.listings: set[PropertySite.Listing] = {}
         
     class Listing(abc.ABC):
         """ Information about specific listings """

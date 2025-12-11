@@ -41,10 +41,10 @@ class Remax(PropertySite):
 
     def populate_listing_list(self,ids:set):
         for item in ids:
-            self.listing_list.append(self.Listing(id=item,attr_dict={"empty":""}))
+            self.listings.add(self.Listing(id=item,attr_dict={"empty":""}))
 
     def listing_append(self, listing=None):
         if listing is None:
             listing = self.Listing()  # create a new listing if none provided
-        self.listing_list.append(listing)
+        self.listings.add(listing)
 
