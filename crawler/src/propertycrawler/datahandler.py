@@ -9,7 +9,7 @@
 import json
 class IO:
     """ save and retrieve from disk """
-    def get_json(self, path):
+    def get_json(path):
         with open(path,'r') as file:
             d = json.load(file) 
         return d
