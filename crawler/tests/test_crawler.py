@@ -6,9 +6,15 @@
 @Contact : kkorsu@gmail.com
 @Desc: None
 '''
+from propertycrawler.crawler import Crawler
+from propertycrawler.datahandler import IO
+from pytest_httpserver import HTTPServer
+from werkzeug.wrappers.response import Response
+from collections.abc import Iterable
 import pytest
 import os
-import http.server
+import requests
+
 class TestCrawler:
     """ 
      atleast test everything that doesn't have to do with wget
@@ -16,20 +22,58 @@ class TestCrawler:
 
      - 
        """
+
+
+    '''this is already a functionality in httpserver, this fixture is just overwriting it...
     @pytest.fixture
-    def mock_html(self):
-        """ make a html file """
-        file = "test.html"
-        example = '"21":{"identifier":"80440756","type":"Kiinteist\u00f6","listingType":"DETACHEDHOUSE","listingTypeLocalized":"Omakotitalo","productGroup":"APARTMENTS","district":"Perno","image":"https:\/\/images.linear.fi\/3764a7f3-3002-496c-a615-299b4c9a1cbb.jpg","town":"Turku","street_address":"Kottaraisenkatu 13","living_area":"105","lot_area":"751","lot_area_in_sqm":"751","rooms":"4h+k+s","price":"199 000","rent":"","agent_id":"5166","publish_date":"2025-10-10 17:08:25","presentationDate":"","presentationStart":"","presentationEnd":"","presentation_info":"","presentation_info_class":" hidden"}'
-        with open(file, "w+") as f:
+    def httpserver(self) -> Iterable[HTTPServer]:
+        """ launch a mock http server """
+        httpserver = HTTPServer(port = 8080) # default -> localhost -> random port
+        yield httpserver
+        httpserver.check_assertions()  # this will raise AssertionError and make the test failing'''
+    @pytest.fixture
+    def mock_json(self, tmp_path):
+        """ make an example file """
+        path = tmp_path / "test"
+        example = '"21":{"identifier":"80440756","type":"Kiinteist"}'
+        with open(path, "w") as f:
             f.write(example)
-        yield file
-        os.remove(file)
+        yield path
 
     @pytest.fixture
-    def mock_html_url(self,mock_html):
-        """ make wget use a local html file """
-        arg = ""
-        http.server.HTTPServer() 
+    def handler(self, mock_json, page=0):
+        """ retrieves an example file according to the page num argument, if there's no file, it yields an empty string """
+        data = ""
+        with open(mock_json, 'r') as f:
+            data = f.read()
+        yield data
 
-    
+    def test_mock_server_is_reachable(self,httpserver):
+        httpserver.expect_request('/index').respond_with_data("OK") # when a request for /index is made, it responds with whatever handler returns
+
+        response = requests.get(httpserver.url_for('/index'))
+        assert response.status_code == 200        
+
+    def test_listing_list_is_retrieved(self, httpserver, handler):
+        httpserver.expect_request('/index').respond_with_data(handler) # when a request for /index is made, it responds with whatever handler returns
+
+        response = requests.get(httpserver.url_for('/index'))
+        assert response.status_code == 200
+        # assert response is identical to mock file
+
+    def test_listing_list_is_retrieved_wget(self, httpserver,handler):
+        httpserver.expect_request('/index').respond_with_handler(handler) # when a request for /index is made, it responds with whatever handler returns
+
+        # now by using wget:
+        Crawler.get_listing_list_page(httpserver.url_for('/index'), filepath= "./testfile.json")
+        file = IO.get_json("./testfile.json")
+        
+        assert file != "" # assert that file is not empty
+
+    def test_listing_list_next_page(self,httpserver,handler):
+        pass
+        #httpserver.expect_request('/index', query_string={'page': '1'}).respond_with_handler(handler(1))
+
+    def test_listing_list_empty_page(self,httpserver,handler):
+        pass
+        #httpserver.expect_request('/index', query_string={'page': '2'}).respond_with_handler(handler(2))
