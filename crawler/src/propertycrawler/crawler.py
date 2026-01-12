@@ -25,10 +25,9 @@ class Crawler:
         for listing in obj.listings:
             Crawler.get_listing_page(listing.url, listing.id, f"./data/listings/{listing.id}.html")
             
-    #doesn't work, something to do with subprocesses. Always returns true
     def get_listing_list_page(url: str, filepath="./data/listings/") -> bool:
         """ download listing list page data as json with wget """
-        if (filepath[-5:] != ".json"): # if filepath doesn't end with the correct suffix
+        if (str(filepath)[-5:] != ".json"): # if filepath doesn't end with the correct suffix
             warnings.warn("method: get_listing_list_page: Improper filepath detected! Resorting to default")
             #warnings.showwarning("Bad Filepath, using default")
             filepath = f"./listing_list"+".json" # relative path not safe to run  anywhere
@@ -36,9 +35,18 @@ class Crawler:
         #subprocess.run(['wget', '-O', f'{filepath}', '--backups', f'{url+id}']) # subprocess.run() should way for result before moving onto next line.
         
         result = subprocess.Popen(['wget', '-q', '-O', '-', f'{url}'], stdout=subprocess.PIPE)
-        to_file = subprocess.check_output(('tee', f'{filepath}'), stdin=result.stdout)
-        #result.wait()
-        if (len(result.stdout) < 10): # if the result is empty #doesnt work
+        #result = subprocess.Popen(['echo', '{"ok": true}'], stdout=subprocess.PIPE)
+
+        to_file = subprocess.check_output(('tee', f'{str(filepath)}'), stdin=result.stdout)
+        
+        #data = result.communicate()[0]
+        #text = data.decode('utf-8')  # decode
+        #to_file = subprocess.check_output(['tee', filepath], input=text.encode('utf-8'))
+
+        result.wait()
+        print("result: ",  result)
+        print("to_file: ", to_file)
+        if (len(to_file) < 10): # if the result is empty #doesnt work
             return False
         else:
             return True

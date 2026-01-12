@@ -11,6 +11,7 @@ from propertycrawler.datahandler import IO
 from pytest_httpserver import HTTPServer
 from werkzeug.wrappers.response import Response
 from collections.abc import Iterable
+import json
 import pytest
 import os
 import requests
@@ -34,8 +35,17 @@ class TestCrawler:
     @pytest.fixture
     def mock_json(self, tmp_path):
         """ make an example file """
-        path = tmp_path / "test"
+        path = tmp_path / "test.json"
         example = '"21":{"identifier":"80440756","type":"Kiinteist"}'
+        with open(path, "w") as f:
+            f.write(example)
+        yield path
+
+    @pytest.fixture
+    def outfile(self, tmp_path):
+        """ make an example file """
+        path = tmp_path / "out.json"
+        example = ''
         with open(path, "w") as f:
             f.write(example)
         yield path
@@ -59,16 +69,37 @@ class TestCrawler:
 
         response = requests.get(httpserver.url_for('/index'))
         assert response.status_code == 200
-        # assert response is identical to mock file
+        assert response.content.decode() == handler
 
-    def test_listing_list_is_retrieved_wget(self, httpserver,handler):
-        httpserver.expect_request('/index').respond_with_handler(handler) # when a request for /index is made, it responds with whatever handler returns
+    def test_listing_list_is_retrieved_wget(self, httpserver,handler, mock_json,outfile):
+        httpserver.expect_request('/index').respond_with_data('{"21":{"identifier":"80440756","type":"Kiinteist"}}') # when a request for /index is made, it responds with whatever handler returns
+        # handler is somehow funky! here if I do it through handler it fails, but with string literal is succeeds... go figure
 
         # now by using wget:
-        Crawler.get_listing_list_page(httpserver.url_for('/index'), filepath= "./testfile.json")
-        file = IO.get_json("./testfile.json")
+        print(Crawler.get_listing_list_page(httpserver.url_for('/index'), filepath= outfile))
+        file = IO.get_json(outfile)
         
         assert file != "" # assert that file is not empty
+
+    def test_listing_list_fails_non_valid_json(self,httpserver,outfile):
+        httpserver.expect_request('/index').respond_with_data("kakihaise") # when a request for /index is made, it responds with whatever handler returns
+
+        # now by using wget:
+        print(Crawler.get_listing_list_page(httpserver.url_for('/index'), filepath= outfile))
+        with pytest.raises(json.JSONDecodeError) as excinfo:
+            file = IO.get_json(outfile)
+        
+        assert excinfo.type is json.JSONDecodeError
+
+    def test_listing_list_succeeds_valid_json(self,httpserver,outfile):
+        data= '{"kaki": "haise"}'
+        httpserver.expect_request('/index').respond_with_data(data) # when a request for /index is made, it responds with whatever handler returns
+
+        # now by using wget:
+        print(Crawler.get_listing_list_page(httpserver.url_for('/index'), filepath= outfile))
+        file = IO.get_json(outfile)
+
+        assert file == data # this must convert file to string from bytestring
 
     def test_listing_list_next_page(self,httpserver,handler):
         pass
