@@ -9,13 +9,33 @@
 import json
 import warnings
 import io
+import os
 
 class IO:
     """ save and retrieve from disk """
-    def get_json(path):
+    def get_json(path) -> list | str:
+        d = []
         with open(path,'r') as file:
-            #d = json.load(file) 
-            d = file.read()
-            print(d)
-            json.JSONDecoder().decode(s=d)
+            d = json.load(file) #not used so the file can be inspected in stdout before throwing an error.
+            """ for line in file:
+                d.append(line)             
+                print(line)
+                json.JSONDecoder().decode(s=d) """
         return d
+    
+    def get_html(path) -> list:
+        d = []
+        with open(path,'r') as file:
+             for line in file:
+                  d.append(line)
+        return d
+                  
+
+            
+    
+    def is_empty(filepath) -> bool:
+        threshold = 100 #in bytes, it seems a empty file returned by wget is 2 bytes and a full one ~13k bytes
+        if (os.path.exists(filepath)):
+            if (os.path.getsize(filepath) > threshold):
+                return False
+        return True

@@ -9,17 +9,28 @@
 
 import subprocess
 from propertysite import PropertySite
+from datahandler import IO
 import warnings
+import pathlib
 import os
 
 class Crawler:
-    def get_listing_page(base_url: str, id: str, filepath="./data/listings/"):
-        """ download listing page html """
-        if (filepath[-5:] != ".html"):
+    def get_listing_page(url: str, id: str, filepath="./data/listings/"):
+        """ download listing page html. Doesn't check for valid html, because it is parsed as txt, not html, for now"""
+        filepath = pathlib.Path(filepath)
+        
+        if (str(filepath)[-5:] != ".html"):
             warnings.warn("method: get_listing_page: Improper filepath detected! Resorting to default")
-            #warnings.showwarning("Bad Filepath, using default")
-            filepath = f"./listing_"+id+".html" # relative path not safe to run  anywhere
-        subprocess.run(['wget', '-O', f'{filepath}', '--backups', f'{base_url+id}'])
+            filepath = pathlib.Path(f"./listing_"+str(id)+".html").absolute()
+        
+        if (not IO.is_empty(filepath)):
+            warnings.warn(f"file is already populated. Creating a new file.")
+            new_filepath = filepath.with_name(f"{filepath.stem}(1){filepath.suffix}")
+            Crawler.get_listing_page(url, id, new_filepath)
+            return
+
+        result = subprocess.run(['wget', '-O', f'{str(filepath)}', f'{url}'])
+        result.check_returncode() # if return code is nonzero -> raises CalledProcessError
 
     def get_listings(obj: PropertySite):
         for listing in obj.listings:
@@ -29,33 +40,19 @@ class Crawler:
         """ download listing list page data as json with wget """
         if (str(filepath)[-5:] != ".json"): # if filepath doesn't end with the correct suffix
             warnings.warn("method: get_listing_list_page: Improper filepath detected! Resorting to default")
-            #warnings.showwarning("Bad Filepath, using default")
-            filepath = f"./listing_list"+".json" # relative path not safe to run  anywhere
-
-        #subprocess.run(['wget', '-O', f'{filepath}', '--backups', f'{url+id}']) # subprocess.run() should way for result before moving onto next line.
-        
+            filepath = pathlib.Path('listing_list.json').absolute()
+      
         result = subprocess.Popen(['wget', '-q', '-O', '-', f'{url}'], stdout=subprocess.PIPE)
-        #result = subprocess.Popen(['echo', '{"ok": true}'], stdout=subprocess.PIPE)
 
         to_file = subprocess.check_output(('tee', f'{str(filepath)}'), stdin=result.stdout)
         
-        #data = result.communicate()[0]
-        #text = data.decode('utf-8')  # decode
-        #to_file = subprocess.check_output(['tee', filepath], input=text.encode('utf-8'))
-
         result.wait()
         print("result: ",  result)
         print("to_file: ", to_file)
-        if (len(to_file) < 10): # if the result is empty #doesnt work
+        if (len(to_file) < 10): # if the result is 'empty'
             return False
         else:
             return True
-
-    def is_empty(filepath) -> bool:
-        threshold = 100 #in bytes, it seems a empty file returned by wget is 2 bytes and a full one ~13k bytes
-        if (os.path.getsize(filepath) < threshold):
-            return True
-        return False
 
     def get_listing_list_full(url: str, filepath="/data/listinglist/"):
         """ cycle through all pages of listing lists """
