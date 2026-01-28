@@ -59,10 +59,11 @@ class Crawler:
         else:
             return True
 
-    def get_listing_list_full(url: str, start_pg=0, filepath="/data/listinglist/"):
+    def get_listing_list_full(url: str, start_pg=0, filepath="/data/listinglist/", separator="&"):
         """ cycle through all pages of listing lists """
         filepath = pathlib.Path(filepath)
         page_n = start_pg
+        query = separator + "page="
         
         while (True):
             # Build the URL with proper query string
@@ -72,7 +73,7 @@ class Crawler:
             else:
                 # Use ? separator for subsequent pages (works with test httpserver)
                 # In production with PHP servers that already have params, adjust accordingly
-                page_url = f"{url}?page={page_n}"
+                page_url = f"{url}{query}{page_n}"
             
             filename = filepath / f"page_{page_n}.html"
             

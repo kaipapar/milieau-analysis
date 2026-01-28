@@ -109,17 +109,16 @@ class TestCrawler:
                 Crawler.get_listing_page(httpserver.url_for('/'+base_url+str(id)), id, filepath)
             except subprocess.CalledProcessError:
                 pytest.fail("subprocess call failed")
+            
 
         def test_default_filepath(self, httpserver):
             base_url = "something"
             id = 9999
             httpserver.expect_request('/'+base_url+str(id)).respond_with_data("OK")
-
-            try: 
+          
+            with pytest.warns(UserWarning):
                 Crawler.get_listing_page(httpserver.url_for('/'+base_url+str(id)), id)
-            except subprocess.CalledProcessError:
-                pytest.fail("subprocess call failed")       
-        
+                    
         def test_file_is_already_populated(self, httpserver, mock_html, tmp_path):
             base_url = "/something"
             id = 9999
@@ -128,7 +127,8 @@ class TestCrawler:
             filepath = mock_html
             url = base_url+str(id)
             httpserver.expect_request(url).respond_with_data(data)
-            Crawler.get_listing_page(httpserver.url_for(url), id, filepath)
+            with pytest.warns(UserWarning):
+                Crawler.get_listing_page(httpserver.url_for(url), id, filepath)
             newpath = mock_html.with_name(f"{mock_html.stem}(1){mock_html.suffix}")
             assert os.path.exists(newpath) 
 
@@ -213,7 +213,7 @@ class TestCrawler:
             httpserver.expect_request('/index', query_string={'page': '1'}).respond_with_data('{"21":{"identifier":"80440756","type":"Kiinteist"}}')
             httpserver.expect_request('/index', query_string={'page': '2'}).respond_with_data('{"22":{"identifier":"80440756","type":"Kiinteist"}}')
 
-            Crawler.get_listing_list_full(httpserver.url_for('/index'), start_pg=1, filepath=tmp_path)
+            Crawler.get_listing_list_full(httpserver.url_for('/index'), start_pg=1, filepath=tmp_path, separator="?")
             file1 = IO.get_json(tmp_path / "page_1.html")
             file2 = IO.get_json(tmp_path / "page_2.html")            
             assert '21' in file1
@@ -224,7 +224,7 @@ class TestCrawler:
             httpserver.expect_request('/index', query_string={'page': '1'}).respond_with_data('{"21":{"identifier":"80440756","type":"Kiinteist"}}')
             httpserver.expect_request('/index', query_string={'page': '2'}).respond_with_data('') # empty page
 
-            Crawler.get_listing_list_full(httpserver.url_for('/index'), start_pg=1, filepath=tmp_path)
+            Crawler.get_listing_list_full(httpserver.url_for('/index'), start_pg=1, filepath=tmp_path, separator="?")
             file1 = IO.get_json(tmp_path / "page_1.html")
             assert '21' in file1
 
