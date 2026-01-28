@@ -202,10 +202,31 @@ class TestCrawler:
 
             assert file == json.loads(data) # this must convert file to string from bytestring
 
-        def test_listing_list_next_page(self,httpserver,handler):
-            pass
-            #httpserver.expect_request('/index', query_string={'page': '1'}).respond_with_handler(handler(1))
+    class TestGetListingListFull:
+        """ testing that multiple pages are retrieved until an empty page is found """
 
-        def test_listing_list_empty_page(self,httpserver,handler):
-            pass
-            #httpserver.expect_request('/index', query_string={'page': '2'}).respond_with_handler(handler(2))
+
+
+        def test_listing_list_next_page(self,httpserver,tmp_path):
+            # checks that next page is retrieved
+
+            httpserver.expect_request('/index', query_string={'page': '1'}).respond_with_data('{"21":{"identifier":"80440756","type":"Kiinteist"}}')
+            httpserver.expect_request('/index', query_string={'page': '2'}).respond_with_data('{"22":{"identifier":"80440756","type":"Kiinteist"}}')
+
+            Crawler.get_listing_list_full(httpserver.url_for('/index'), start_pg=1, filepath=tmp_path)
+            file1 = IO.get_json(tmp_path / "page_1.html")
+            file2 = IO.get_json(tmp_path / "page_2.html")            
+            assert '21' in file1
+            assert '22' in file2        
+
+        def test_listing_list_empty_page(self, httpserver, tmp_path):
+            # if next page is empty, it stops and deletes the empty file
+            httpserver.expect_request('/index', query_string={'page': '1'}).respond_with_data('{"21":{"identifier":"80440756","type":"Kiinteist"}}')
+            httpserver.expect_request('/index', query_string={'page': '2'}).respond_with_data('') # empty page
+
+            Crawler.get_listing_list_full(httpserver.url_for('/index'), start_pg=1, filepath=tmp_path)
+            file1 = IO.get_json(tmp_path / "page_1.html")
+            assert '21' in file1
+
+            with pytest.raises(FileNotFoundError) as excinfo:
+                file2 = IO.get_json(tmp_path / "page_2.html")
