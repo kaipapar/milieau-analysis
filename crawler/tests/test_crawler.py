@@ -100,11 +100,11 @@ class TestCrawler:
             
             assert data == content
 
-        def test_improper_custom_filepath(self, httpserver):
+        def test_improper_custom_filepath(self, httpserver, tmp_path):
             base_url = "something"
             id = 9999
             httpserver.expect_request('/'+base_url+str(id)).respond_with_data("OK")
-            filepath = "**< > : | ? ***.html"
+            filepath = tmp_path / "**< > : | ? ***.html"
             try: 
                 Crawler.get_listing_page(httpserver.url_for('/'+base_url+str(id)), id, filepath)
             except subprocess.CalledProcessError:
