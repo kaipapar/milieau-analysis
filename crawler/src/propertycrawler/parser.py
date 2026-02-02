@@ -30,7 +30,9 @@ class JsonParser:
         while (i < l):
             n = self._get_id(i)
             # validation
-            if not isinstance(n,int):
+            try:
+                n = int(n)
+            except ValueError:
                 warn(f"Invalid id found in json list: {n}, skipping...")
             else:
                 ids.add(n)

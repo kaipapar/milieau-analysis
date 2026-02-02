@@ -26,7 +26,7 @@ class TestParser:
         def test_gen_id_set_only_outputs_valid_ids(self,parser):
             """ checks that gen_id_set only outputs integers """
             parser.json_list = [{"identifier":123},{"identifier":125},{"identifier":143},{"identifier":"kaka"}, {"identifier":"143"}]
-            with pytest.warns(UserWarning):
+            with pytest.warns(UserWarning, match="kaka"): # check that kaka is causing the warning and not "143"
                 ids = parser.gen_id_set()
             assert all(isinstance(item, int) for item in ids), "unexpected type found"
         
@@ -35,8 +35,14 @@ class TestParser:
             parser.json_list = []
             ids = parser.gen_id_set()
             assert ids == set(), "expected empty set"
-        
 
+        def test_gen_id_set_converts_string_numbers(self,parser):
+            """ checks that gen_id_set converts string numbers to integers """
+            parser.json_list = [{"identifier":"123"},{"identifier":"125"},{"identifier":"143"}]
+            ids = parser.gen_id_set()
+            assert ids == {123,125,143}, "expected all string numbers to be converted to integers"
+        
+        
     class TestHtmlParser:
         @pytest.fixture
         def parser(self):
