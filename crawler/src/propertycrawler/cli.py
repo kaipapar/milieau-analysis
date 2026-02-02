@@ -21,6 +21,12 @@ def argparser(args):
     parser.add_argument('-v', '--verbose',
                     action='store_true')  # on/off flag """
     
+
+
     arglist = parser.parse_args(args)
+    if not isinstance(arglist.url, str):
+        raise TypeError("The provided URL must be a string.")
+    if not arglist.url.startswith("http"):
+        raise ValueError("The provided URL is not well formed.")
     print(arglist.url)
     return arglist
