@@ -36,7 +36,7 @@ class Remax(PropertySite):
     @listing_ids.setter
     def listing_ids(self,value:list):
         """ adds 'value' to listing_ids """
-        #self._listing_ids.add(value)#JsonParser.get_ids(value)
+        #self._listing_ids.add(value)#JsonParser.gen_id_set(value)
         self._listing_ids |= value
 
     def populate_listing_list(self,ids:set):

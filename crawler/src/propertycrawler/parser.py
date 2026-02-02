@@ -8,6 +8,8 @@
 '''
 import json
 from datahandler import IO
+from warnings import warn
+
 class HtmlParser:
     """ For parsing propertylisting html """
     pass
@@ -19,11 +21,18 @@ class JsonParser:
     def _get_id(self, index, id = "identifier") -> int:
         return self.json_list[index][id]
 
-    def get_ids(self) -> set:
+    def gen_id_set(self) -> set:
+        """ return set of property listing IDs from the php response json list.
+            They are used to generate urls. """
         l = len(self.json_list)
         i = 0
         ids = set()
         while (i < l):
-            ids.add(self._get_id(i))
+            n = self._get_id(i)
+            # validation
+            if not isinstance(n,int):
+                warn(f"Invalid id found in json list: {n}, skipping...")
+            else:
+                ids.add(n)
             i+=1
         return ids

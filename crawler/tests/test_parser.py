@@ -9,18 +9,29 @@
 
 import pytest
 from propertycrawler.parser import JsonParser
+from propertycrawler.parser import HtmlParser  
 
 class TestParser:
-    @pytest.fixture
-    def parser(self):
-        jsonlist = [{"identifier":""}]
-        yield JsonParser(json_list=jsonlist)
+    """ Tests for parsing both HTML and JSON content """
+    class TestJsonParser:
+        @pytest.fixture
+        def parser(self):
+            jsonlist = [{"identifier":""}]
+            yield JsonParser(json_list=jsonlist)
 
-    def test_get_ids_outputs_ids(self,parser):
-        parser.json_list = [{"identifier":123},{"identifier":125},{"identifier":143},]
-        assert {123,125,143}.issubset(parser.get_ids()) 
+        def test_gen_id_set_outputs_ids(self,parser):
+            parser.json_list = [{"identifier":123},{"identifier":125},{"identifier":143},]
+            assert {123,125,143}.issubset(parser.gen_id_set()) 
 
-    def test_get_ids_only_outputs_valid_ids(self,parser):
-        parser.json_list = [{"identifier":123},{"identifier":125},{"identifier":143},{"identifier":"kaka"}, {"identifier":"143"}]
-        ids = parser.get_ids()
-        assert all(isinstance(item, int) for item in parser.get_ids()), "unexpected type found"
+        def test_gen_id_set_only_outputs_valid_ids(self,parser):
+            """ checks that gen_id_set only outputs integers """
+            parser.json_list = [{"identifier":123},{"identifier":125},{"identifier":143},{"identifier":"kaka"}, {"identifier":"143"}]
+            ids = parser.gen_id_set()
+            assert all(isinstance(item, int) for item in ids), "unexpected type found"
+        
+
+    class TestHtmlParser:
+        @pytest.fixture
+        def parser(self):
+            html = "<html></html>"
+            yield HtmlParser(html_content=html)

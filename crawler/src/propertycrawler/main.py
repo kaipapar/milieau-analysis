@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # process the retrieved json containing the listings into a more compact set of Listing objects
     json = JsonParser(listings)
     print('getting ids')
-    ids = json.get_ids()
+    ids = json.gen_id_set()
     remax.populate_listing_list(ids)
 
     print(remax.listings)
