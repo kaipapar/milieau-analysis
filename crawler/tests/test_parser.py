@@ -10,6 +10,11 @@
 import pytest
 from propertycrawler.parser import JsonParser
 from propertycrawler.parser import HtmlParser  
+from bs4 import BeautifulSoup
+from pathlib import Path
+from propertycrawler.remax import Remax
+import re
+
 
 class TestParser:
     """ Tests for parsing both HTML and JSON content """
@@ -48,3 +53,63 @@ class TestParser:
         def parser(self):
             html = "<html></html>"
             yield HtmlParser(html_content=html)
+
+        @pytest.fixture
+        def get_project_root(self):
+            if Path(__file__).parent.parent.name == 'crawler':
+                yield Path(__file__).parent.parent
+            else:
+                pytest.skip(f'HTML tests skipped : directory structure unknown, \
+                            tried to look for project root at: {Path(__file__).parent.parent.name}')
+
+        @pytest.fixture
+        def fp_to_example_html(self, get_project_root):
+            # add your own example file
+            file_path = get_project_root/'data'/'Myydään _ Markulantie 119, Turku 20320 _ 1h+kk _ RE_MAX OmaanKotiin.html'
+            if not file_path.exists():
+                pytest.skip(f'HTML tests skipped : Example html file not found : {file_path}')
+            with open(file_path) as fp:
+                yield fp
+
+        def test_bs4_loads(self):
+            """ beautiful soup initiates a bs instance correctly """
+            bs4 = BeautifulSoup("<html></html>", 'html.parser')
+            assert type(bs4) == BeautifulSoup
+
+        def test_bs4_loads_full_page(self, fp_to_example_html):
+            """ Check that the example file is found, it can be printed with pytest argument -s """
+            bs4 = BeautifulSoup(fp_to_example_html, 'html.parser')
+
+            for i,line in enumerate(bs4.prettify()):
+                print(line)
+                if i > 10:
+                    break
+            assert bs4 != None
+
+        def test_extract_list_header(self, fp_to_example_html):
+            """ Check that the remax style of header can be found in the bs object """
+            bs4 = BeautifulSoup(fp_to_example_html, 'html.parser')
+            listing = Remax().Listing(id=0, attr_dict={'kaka':'pupu'})
+            header = bs4.find(string=listing.header_html[1]).parent
+            print(header)
+            assert set(header).issubset(listing.header_html)
+            
+        def test_extract_all_attributes_to_memory(self, fp_to_example_html):
+            """ Check that the perustiedot list contents can be retrieved """
+            bs4 = BeautifulSoup(fp_to_example_html, 'html.parser')
+            # get the list keys
+            keys = Remax.Listing.attr_keys
+            # get all list keys from bs4
+            all_keys = bs4.find_all("div", "col-12 col-md-5 list-label")
+            attr_dict= {}
+            new_dict = {}
+
+            new_dict = HtmlParser.get_attributes(keys, ("div", "col-12 col-md-7 list-value"), bs4)
+            listing = Remax.Listing(0, attr_dict)
+            print(listing.attr_dict.values())
+            assert len(keys) == len(new_dict.keys())
+            assert keys == list(new_dict.keys())
+
+        def test_attributes_not_found_from_html(self):
+            """ test that attributes that default values are set for the attributest that aren't found """
+            pass            
