@@ -9,9 +9,34 @@
 import json
 from datahandler import IO
 from warnings import warn
+from bs4 import BeautifulSoup
+import re
+from propertycrawler.propertysite import PropertySite
+from propertycrawler.remax import Remax
 
 class HtmlParser:
-    """ For parsing propertylisting html """
+    """ Logic parsing propertylisting html """
+    def get_attributes(keys : list, list_value_tag : tuple, bs: BeautifulSoup) -> dict:
+        new_dict = {}
+        for item in keys:
+            label = bs.find("div", string=re.compile(item))
+            try:
+                new_dict[label.get_text()] = label.parent.find_next(list_value_tag[0], list_value_tag[1]).get_text()
+            except AttributeError: # the label hasn't been found -> add the key value pair as default
+                # new_dict.setdefault(item)
+                new_dict[item] = None
+            finally:
+                print('label: ', item)
+                print('value: ', new_dict[item])
+        return new_dict
+    def parse(listing: PropertySite.Listing, bs):
+        pass # unfinished
+        match type(listing):
+            case Remax.Listing:
+                HtmlParser.get_attributes(keys = Remax.Listing.attr_keys, \
+                                          list_value_tag = Remax.Listing.label_value_tag, \
+                                          bs = bs )
+            
     pass
 class JsonParser:
     """ For parsing remax php search response """

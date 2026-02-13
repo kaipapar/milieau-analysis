@@ -21,10 +21,9 @@ class PropertySite(abc.ABC):
     class Listing(abc.ABC):
         """ Information about specific listings """
         url = ""            # baseurl for all listings
-        list_header = ""    # list header name
         header_html = ()    # html list header element structure
         label_value_tag = ()      # attribute list html element structure
-        attr_keys = []      # attribute titles from html
+        attr_keys = []      # attribute titles from html Q: Is this stored as a new object for each instance?
 
         def __init__(self, id, attr_dict):
             self.id = id        # url + id -> listing location on website
