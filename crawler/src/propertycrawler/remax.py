@@ -9,7 +9,6 @@
 
 from propertysite import PropertySite
 from constants import REMAX_ATTR_KEYS as ATTR_KEYS
-from parser import JsonParser
 
 class Remax(PropertySite):
     url="https://remax.fi/myytavat-asunnot/"
@@ -19,9 +18,8 @@ class Remax(PropertySite):
     
     class Listing(PropertySite.Listing):
         url = "https://remax.fi/kohde/"
-        list_header = "<h5>Perustiedot</h5>"
-        label_value_tag = ('<div class="col-12 col-md-5 list-label">',
-                           '<div class="col-12 col-md-7 list-value">')
+        header_html = ("<h5>", "Perustiedot")
+        label_value_tag = ('div',"col-12 col-md-7 list-value")
         attr_keys = ATTR_KEYS
         def __init__(self, id: int, attr_dict: dict):
             super().__init__(id=id, attr_dict=attr_dict)
