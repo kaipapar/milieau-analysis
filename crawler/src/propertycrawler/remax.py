@@ -15,15 +15,19 @@ class Remax(PropertySite):
     php_query_url = "https://remax.fi/wp-content/themes/blocksy-child/property_search_LINEAR.php"
     def __init__(self):
         super().__init__()
-    
+
     class Listing(PropertySite.Listing):
         url = "https://remax.fi/kohde/"
         header_html = ("<h5>", "Perustiedot")
         label_value_tag = ('div',"col-12 col-md-7 list-value")
         attr_keys = ATTR_KEYS
-        def __init__(self, id: int, attr_dict: dict = {}):
-            super().__init__(id=id, attr_dict=attr_dict)
+        def __init__(self, id: int, attr_dict: dict = None):
+            super().__init__(id=id, attr_dict = None)
+            if self.attr_dict is None:
+                attr_dict = {}
+            self.attr_dict = attr_dict
             self.url = f'{Remax.Listing.url}{id}'
+            self.file_name = f"remax_{self.id}.html"
 
     def next_page(self):
         pass
@@ -37,11 +41,6 @@ class Remax(PropertySite):
         """ adds 'value' to listing_ids """
         #self._listing_ids.add(value)#JsonParser.gen_id_set(value)
         self._listing_ids |= value
-
-    def populate_listing_list(self,ids:set):
-        """ generate listing objects and add them to listings """
-        for item in ids:
-            self.listings.add(self.Listing(id=item))
 
     def listing_append(self, listing=None):
         if listing is None:

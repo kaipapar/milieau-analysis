@@ -17,17 +17,27 @@ class PropertySite(abc.ABC):
     def __init__(self):
         self._listing_ids: set[int] = set()
         self.listings: set[PropertySite.Listing] = set()
-        
-    class Listing(abc.ABC):
+    
+    class Listing:
         """ Information about specific listings """
         url = ""            # baseurl for all listings
         header_html = ()    # html list header element structure
         label_value_tag = ()      # attribute list html element structure
         attr_keys = []      # attribute titles from html Q: Is this stored as a new object for each instance?
-
-        def __init__(self, id, attr_dict: dict = {}):
+        
+        # TODO validate filepath so that root is "crawler"
+        # TODO convert from string literal to Path type? 
+        file_body = f"./data/listings/"
+        
+        def __init__(self, id, attr_dict: dict = None):
             self.id = id        # url + id -> listing location on website
-            self.attr_dict = attr_dict # listing attributes with title and value
+            self.attr_dict = attr_dict
+            if self.attr_dict is None:
+                self.attr_dict = {} # listing attributes with title and value
+            # add a name for whatever implementation subclass the listing represents 
+            # can this be done programatically with ie __repr__?
+            self.file_name = f"{self.id}.html"
+            self.filepath = self.file_body + self.file_name
 
         def __repr__(self):
             return f"Listing object, id: {self.id}"
@@ -41,6 +51,7 @@ class PropertySite(abc.ABC):
             pass
         
     @property
+    @abc.abstractmethod
     def listing_ids(self):
         return self._listing_ids
 
@@ -48,9 +59,17 @@ class PropertySite(abc.ABC):
     def listing_ids(self, value):
         self._listing_ids = value
     
+    @abc.abstractmethod
     def next_page(self):
         raise NotImplementedError("next page method not implemented")
 
+    def populate_listing_list(self,ids:set):
+        """ generate listing objects and add them to listings """
+        for item in ids:
+            self.listings.add(self.Listing(id=item))
+
+
+    @abc.abstractmethod
     def listing_append(self):
         raise NotImplementedError("listing_append() not implemented")
 
