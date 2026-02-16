@@ -11,12 +11,16 @@ from datahandler import IO
 from warnings import warn
 from bs4 import BeautifulSoup
 import re
-from propertycrawler.propertysite import PropertySite
-from propertycrawler.remax import Remax
+from propertysite import PropertySite
+from datahandler import IO
+
+# need this more verbose import for checking whether listing is instance Remax.Listing
+from propertycrawler.remax import Remax 
 
 class HtmlParser:
     """ Logic parsing propertylisting html """
-    def get_attributes(keys : list, list_value_tag : tuple, bs: BeautifulSoup) -> dict:
+    @staticmethod
+    def get_attributes(keys: list, list_value_tag: tuple, bs: BeautifulSoup) -> dict:
         new_dict = {}
         for item in keys:
             label = bs.find("div", string=re.compile(item))
@@ -28,16 +32,39 @@ class HtmlParser:
             finally:
                 print('label: ', item)
                 print('value: ', new_dict[item])
+        print("new_dict***",new_dict, "\n")
         return new_dict
-    def parse(listing: PropertySite.Listing, bs):
-        pass # unfinished
-        match type(listing):
+    @staticmethod
+    def parse(listing: PropertySite.Listing):
+        """ Interface for HTMLparser. Parses one listing page """
+        #pass # unfinished
+        file = open(listing.filepath)
+        #bs = BeautifulSoup(IO.get_file(listing.filepath), 'html.parser') #needs a pointer to the html file.
+        #bs = BeautifulSoup(listing.filepath, 'html.parser') #needs a pointer to the html file.
+        bs = BeautifulSoup(file, 'html.parser') #needs a pointer to the html file.
+        print("*****type:", type(listing))
+        print("**another type:", type(Remax.Listing))
+        
+        if isinstance(listing, Remax.Listing):
+            print("\nsuccess****")        
+            listing.attr_dict = HtmlParser.get_attributes(
+                keys=Remax.Listing.attr_keys,
+                list_value_tag=Remax.Listing.label_value_tag,
+                bs=bs
+            )
+        
+        """    
+        func = lambda x, y : isinstance(x, y)
+        match func(listing):
             case Remax.Listing:
-                HtmlParser.get_attributes(keys = Remax.Listing.attr_keys, \
+                listing.attr_dict = HtmlParser.get_attributes(keys = Remax.Listing.attr_keys, \
                                           list_value_tag = Remax.Listing.label_value_tag, \
-                                          bs = bs )
+                                          bs = bs ) """
+    
+    def parse_listings():
+        """ cycle through listings and parse them all """
+        pass
             
-    pass
 class JsonParser:
     """ For parsing remax php search response """
     def __init__(self,json_list):

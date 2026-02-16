@@ -71,6 +71,15 @@ class TestParser:
             with open(file_path) as fp:
                 yield fp
 
+        @pytest.fixture
+        def default_attribute_dict(self, fp_to_example_html):
+            # Yield an example table, so it doesn't have to be generated for every test.
+            bs4 = BeautifulSoup(fp_to_example_html, 'html.parser')
+
+            attr_dict = HtmlParser.get_attributes(Remax.Listing.attr_keys, Remax.Listing.label_value_tag, bs4)
+
+            yield attr_dict
+
         def test_bs4_loads(self):
             """ beautiful soup initiates a bs instance correctly """
             bs4 = BeautifulSoup("<html></html>", 'html.parser')
@@ -110,6 +119,18 @@ class TestParser:
             assert len(keys) == len(new_dict.keys())
             assert keys == list(new_dict.keys())
 
+        def test_htmlparser_interface(self, default_attribute_dict, get_project_root):
+            correct_listing = Remax.Listing(0, default_attribute_dict)
+            file_path = get_project_root/'data'/'Myydään _ Markulantie 119, Turku 20320 _ 1h+kk _ RE_MAX OmaanKotiin.html'
+
+            test_listing = Remax.Listing(1)
+            test_listing.filepath = str(file_path)
+            HtmlParser.parse(test_listing)
+            assert correct_listing.attr_dict == test_listing.attr_dict
+
         def test_attributes_not_found_from_html(self):
             """ test that attributes that default values are set for the attributest that aren't found """
             pass            
+
+        def test_generate_multiple_listings(self):
+            pass
