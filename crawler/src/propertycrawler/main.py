@@ -27,8 +27,6 @@ if __name__ == "__main__":
 
     # initialize class instances
     remax = Remax()
-    io = IO()
-    crawler = Crawler()
 
     # set the url from cli arguments as the url to be used
     remax.php_query_url = args.url
@@ -37,9 +35,9 @@ if __name__ == "__main__":
     session ="today+site"
 
     ## for functional testing
-    url = "https://remax.fi/wp-content/themes/blocksy-child/property_search_LINEAR.php?property-type=asunnot&realty-type=&bedrooms=&showings-from=&showings-to=&location=turku&price_min=&price_max=&living_area_m2_min=&living_area_m2_max=&lot_area_min=&lot_area_max=&buildyear_min=&buildyear_max=&location=turku&page=15"
+    url = "https://remax.fi/wp-content/themes/blocksy-child/property_search_LINEAR.php?property-type=asunnot&realty-type=&bedrooms=&showings-from=&showings-to=&location=turku&price_min=&price_max=&living_area_m2_min=&living_area_m2_max=&lot_area_min=&lot_area_max=&buildyear_min=&buildyear_max=&location=turku"
     
-    listings = io.get_json("data/property_search_LINEAR.php.html")
+    listings = IO.get_json("data/property_search_LINEAR.php.html")
     print(listings)
     ## 
 
@@ -52,7 +50,7 @@ if __name__ == "__main__":
     print(remax.listings)
     for item in remax.listings:
         #crawler.get_listing_page(remax.Listing.url, item.id) #tested functionally, works 
-        print(crawler.get_listing_list_page(url))
+        print(Crawler.get_listing_list_page(url))
         break
 
 
