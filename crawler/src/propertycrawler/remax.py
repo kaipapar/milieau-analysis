@@ -21,8 +21,9 @@ class Remax(PropertySite):
         header_html = ("<h5>", "Perustiedot")
         label_value_tag = ('div',"col-12 col-md-7 list-value")
         attr_keys = ATTR_KEYS
-        def __init__(self, id: int, attr_dict: dict):
+        def __init__(self, id: int, attr_dict: dict = {}):
             super().__init__(id=id, attr_dict=attr_dict)
+            self.url = f'{Remax.Listing.url}{id}'
 
     def next_page(self):
         pass
@@ -38,8 +39,9 @@ class Remax(PropertySite):
         self._listing_ids |= value
 
     def populate_listing_list(self,ids:set):
+        """ generate listing objects and add them to listings """
         for item in ids:
-            self.listings.add(self.Listing(id=item,attr_dict={"empty":""}))
+            self.listings.add(self.Listing(id=item))
 
     def listing_append(self, listing=None):
         if listing is None:

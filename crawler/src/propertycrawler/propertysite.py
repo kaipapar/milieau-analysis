@@ -25,7 +25,7 @@ class PropertySite(abc.ABC):
         label_value_tag = ()      # attribute list html element structure
         attr_keys = []      # attribute titles from html Q: Is this stored as a new object for each instance?
 
-        def __init__(self, id, attr_dict):
+        def __init__(self, id, attr_dict: dict = {}):
             self.id = id        # url + id -> listing location on website
             self.attr_dict = attr_dict # listing attributes with title and value
 
