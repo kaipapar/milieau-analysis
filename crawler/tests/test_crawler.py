@@ -149,8 +149,10 @@ class TestCrawler:
             """ Not implemented, because html format is not needed for parsing, yet """
             pass
 
-        """ # what am I testing here?
         def test_improper_url(self, httpserver):
+            """ TODO: Test that urls are validated at get_listing_page level. Should return a UserError. 
+                It would make sure that the program is used correctly, and fail in a more verbose manner. """
+            pytest.skip() # remove when implemented
             base_url = "something"
             id = 9999
             httpserver.expect_request('/'+base_url+str(id)).respond_with_data("OK")
@@ -160,6 +162,7 @@ class TestCrawler:
             except subprocess.CalledProcessError:
                 pytest.fail("subprocess call failed")             
         
+        """ # what am I testing here?
         def test_improper_id(self, httpserver):
             base_url = "something"
             id = 9999
