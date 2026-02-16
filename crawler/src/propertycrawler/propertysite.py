@@ -30,7 +30,7 @@ class PropertySite(abc.ABC):
             self.attr_dict = attr_dict # listing attributes with title and value
 
         def __repr__(self):
-            return "Listing object, id: "+self.id
+            return f"Listing object, id: {self.id}"
 
         def attr_label_html(self,index):
             """ returns HTML element with list tag and list label  """

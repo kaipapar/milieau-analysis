@@ -20,7 +20,7 @@ class Crawler:
         filepath = pathlib.Path(filepath)
         
         if (str(filepath)[-5:] != ".html"):
-            warnings.warn("method: get_listing_page: Improper filepath detected! Resorting to default")
+            warnings.warn(f"method: get_listing_page: Improper filepath detected: {filepath} \tResorting to default")
             filepath = pathlib.Path(f"./listing_"+str(id)+".html").absolute()
         
         if (not IO.is_empty(filepath)):
@@ -44,7 +44,7 @@ class Crawler:
         # Check for both .json and .html file extensions (for test compatibility)
         valid_extensions = (".json", ".html")
         if not str(filepath).endswith(valid_extensions):
-            warnings.warn("method: get_listing_list_page: Improper filepath detected! Resorting to default")
+            warnings.warn(f"method: get_listing_list_page: Improper filepath detected: {filepath} \tResorting to default")
             filepath = pathlib.Path('listing_list.json').absolute()
       
         result = subprocess.Popen(['wget', '-q', '-O', '-', f'{url}'], stdout=subprocess.PIPE)
