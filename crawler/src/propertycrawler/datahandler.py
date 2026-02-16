@@ -10,6 +10,7 @@ import json
 import warnings
 import io
 import os
+import pathlib
 
 class IO:
     """ save and retrieve from disk """
@@ -29,7 +30,14 @@ class IO:
              for line in file:
                   d.append(line)
         return d
-                  
+    
+    """ def get_html_fp(path: pathlib.Path):
+        try:
+            path.exists()
+        except FileNotFoundError:
+            return
+        with open()
+                   """
 
             
     
