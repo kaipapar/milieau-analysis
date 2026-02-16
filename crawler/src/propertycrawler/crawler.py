@@ -16,7 +16,7 @@ import os
 
 class Crawler:
     def get_listing_page(url: str, id: str, filepath="./data/listings/"):
-        """ download listing page html. Doesn't check for valid html, because it is parsed as txt, not html, for now"""
+        """ retrieve and save individual listing page. Doesn't check for valid html, because it is parsed as txt, not html, for now"""
         filepath = pathlib.Path(filepath)
         
         if (str(filepath)[-5:] != ".html"):
@@ -37,7 +37,7 @@ class Crawler:
             Crawler.get_listing_page(listing.url, listing.id, f"./data/listings/{listing.id}.html")
             
     def get_listing_list_page(url: str, filepath="./data/listings/") -> bool:
-        """ download listing list page data as json with wget """
+        """ retrieve and save listing list page to specified location with wget """
         # Convert to pathlib.Path for consistent handling
         filepath = pathlib.Path(filepath)
         
