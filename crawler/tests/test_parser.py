@@ -13,6 +13,7 @@ from propertycrawler.parser import HtmlParser
 from bs4 import BeautifulSoup
 from pathlib import Path
 from propertycrawler.remax import Remax
+from propertycrawler.propertysite import PropertySite
 import re
 
 
@@ -48,7 +49,8 @@ class TestParser:
             assert ids == {123,125,143}, "expected all string numbers to be converted to integers"
         
         
-    class TestHtmlParser:
+    class TestHtmlParser:            
+        
         @pytest.fixture
         def parser(self):
             html = "<html></html>"
@@ -119,7 +121,7 @@ class TestParser:
             assert len(keys) == len(new_dict.keys())
             assert keys == list(new_dict.keys())
 
-        def test_htmlparser_interface(self, default_attribute_dict, get_project_root):
+        def test_correct_type_listing(self, default_attribute_dict, get_project_root):
             correct_listing = Remax.Listing(0, default_attribute_dict)
             file_path = get_project_root/'data'/'Myydään _ Markulantie 119, Turku 20320 _ 1h+kk _ RE_MAX OmaanKotiin.html'
 
@@ -127,6 +129,16 @@ class TestParser:
             test_listing.filepath = str(file_path)
             HtmlParser.parse(test_listing)
             assert correct_listing.attr_dict == test_listing.attr_dict
+
+        def test_incorrect_type_listing(self, default_attribute_dict, get_project_root):
+            wrong_type = PropertySite.Listing(0, default_attribute_dict)
+            file_path = get_project_root/'data'/'Myydään _ Markulantie 119, Turku 20320 _ 1h+kk _ RE_MAX OmaanKotiin.html'
+
+            wrong_type.filepath = str(file_path)
+            with pytest.warns(UserWarning): 
+                # Gives userwarning because functionality for the abc PropertySite.Listing is not implemented
+                HtmlParser.parse(wrong_type)
+            
 
         def test_attributes_not_found_from_html(self):
             """ test that attributes that default values are set for the attributest that aren't found """

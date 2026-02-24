@@ -38,28 +38,26 @@ class HtmlParser:
     def parse(listing: PropertySite.Listing):
         """ Interface for HTMLparser. Parses one listing page """
         #pass # unfinished
-        file = open(listing.filepath)
+        #IO.get_file()
+        file = open(listing.filepath) # leaves file open...
         #bs = BeautifulSoup(IO.get_file(listing.filepath), 'html.parser') #needs a pointer to the html file.
         #bs = BeautifulSoup(listing.filepath, 'html.parser') #needs a pointer to the html file.
         bs = BeautifulSoup(file, 'html.parser') #needs a pointer to the html file.
         print("*****type:", type(listing))
         print("**another type:", type(Remax.Listing))
-        
-        if isinstance(listing, Remax.Listing):
-            print("\nsuccess****")        
-            listing.attr_dict = HtmlParser.get_attributes(
-                keys=Remax.Listing.attr_keys,
-                list_value_tag=Remax.Listing.label_value_tag,
-                bs=bs
-            )
-        
-        """    
-        func = lambda x, y : isinstance(x, y)
-        match func(listing):
+
+        match type(listing):
             case Remax.Listing:
-                listing.attr_dict = HtmlParser.get_attributes(keys = Remax.Listing.attr_keys, \
-                                          list_value_tag = Remax.Listing.label_value_tag, \
-                                          bs = bs ) """
+                print("\nsuccess****")        
+                listing.attr_dict = HtmlParser.get_attributes(
+                    keys=Remax.Listing.attr_keys,
+                    list_value_tag=Remax.Listing.label_value_tag,
+                    bs=bs
+                )
+            case _:
+                print("Not found ***")
+                warn(f"listing variable type handling is unknown: type: {type(listing)}")
+        file.close()
     
     def parse_listings():
         """ cycle through listings and parse them all """
