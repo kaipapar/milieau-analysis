@@ -59,9 +59,11 @@ class HtmlParser:
                 warn(f"listing variable type handling is unknown: type: {type(listing)}")
         file.close()
     
-    def parse_listings():
+    @staticmethod
+    def parse_listings(listings: list[PropertySite.Listing]):
         """ cycle through listings and parse them all """
-        pass
+        for listing in listings:
+            HtmlParser.parse(listing)
             
 class JsonParser:
     """ For parsing remax php search response """

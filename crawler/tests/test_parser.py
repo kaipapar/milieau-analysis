@@ -144,5 +144,48 @@ class TestParser:
             """ test that attributes that default values are set for the attributest that aren't found """
             pass            
 
+        def test_parse_listings_with_single_listing(self, get_project_root):
+            """ Test that parse_listings correctly parses a single listing """
+            file_path = get_project_root/'data'/'Myydään _ Markulantie 119, Turku 20320 _ 1h+kk _ RE_MAX OmaanKotiin.html'
+            if not file_path.exists():
+                pytest.skip(f'Test skipped: Example html file not found: {file_path}')
+            
+            listing = Remax.Listing(1)
+            listing.filepath = str(file_path)
+            
+            listings = [listing]
+            HtmlParser.parse_listings(listings)
+            
+            # Verify that the listing was parsed (attr_dict should not be empty)
+            assert listing.attr_dict is not None
+            assert len(listing.attr_dict) > 0
+
+        def test_parse_listings_with_multiple_listings(self, get_project_root):
+            """ Test that parse_listings correctly parses multiple listings """
+            file_path = get_project_root/'data'/'Myydään _ Markulantie 119, Turku 20320 _ 1h+kk _ RE_MAX OmaanKotiin.html'
+            if not file_path.exists():
+                pytest.skip(f'Test skipped: Example html file not found: {file_path}')
+            
+            listings = [
+                Remax.Listing(1),
+                Remax.Listing(2),
+                Remax.Listing(3)
+            ]
+            for listing in listings:
+                listing.filepath = str(file_path)
+            
+            HtmlParser.parse_listings(listings)
+            
+            # Verify that all listings were parsed
+            for listing in listings:
+                assert listing.attr_dict is not None
+                assert len(listing.attr_dict) > 0
+
+        def test_parse_listings_with_empty_list(self):
+            """ Test that parse_listings handles empty list correctly """
+            listings = []
+            # Should not raise any exception
+            HtmlParser.parse_listings(listings)
+
         def test_generate_multiple_listings(self):
             pass
