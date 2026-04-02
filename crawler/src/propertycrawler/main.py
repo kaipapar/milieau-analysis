@@ -11,7 +11,10 @@ from remax import Remax
 from cli import argparser
 from datahandler import IO
 from parser import JsonParser
+from parser import HtmlParser
+from datahandler import DF
 from crawler import Crawler
+from constants import REMAX_ATTR_KEYS
 if __name__ == "__main__":
     """ 
      1. Enter URL as CLI input (direct link to public content for now)
@@ -32,34 +35,31 @@ if __name__ == "__main__":
      12. Voilá
         """
     args = argparser(argv[1:])
-
     # initialize class instances
     remax = Remax()
-
     # set the url from cli arguments as the url to be used
     remax.php_query_url = args.url
 
-    # add session id! TODO
-    session ="today+site"
-
     ## for functional testing
-    url = "https://remax.fi/wp-content/themes/blocksy-child/property_search_LINEAR.php?property-type=asunnot&realty-type=&bedrooms=&showings-from=&showings-to=&location=turku&price_min=&price_max=&living_area_m2_min=&living_area_m2_max=&lot_area_min=&lot_area_max=&buildyear_min=&buildyear_max=&location=turku"
-    
+    #url = "https://remax.fi/wp-content/themes/blocksy-child/property_search_LINEAR.php?property-type=asunnot&realty-type=&bedrooms=&showings-from=&showings-to=&location=turku&price_min=&price_max=&living_area_m2_min=&living_area_m2_max=&lot_area_min=&lot_area_max=&buildyear_min=&buildyear_max=&location=turku"
+
+    """ 
     listings = IO.get_json("data/property_search_LINEAR.php.html")
-    print(listings)
+    print(listings) """
     ## 
 
-    # process the retrieved json containing the listings into a more compact set of Listing objects
+    # filepath should be specified to sessionID
+    Crawler.get_listing_list_full(url = remax.php_query_url)
+    listings = IO.get_json('/data/listinglist/page_0.html') # only gets page_0 for now, need to cycle
+    # process the retrieved json containing the listings into a more compact list of Listing objects
     json = JsonParser(listings)
-    print('getting ids')
-    ids = json.gen_id_set()
-    remax.populate_listing_list(ids)
-
+    remax.populate_listing_list(json.gen_id_set())
     print(remax.listings)
-    for item in remax.listings:
-        #crawler.get_listing_page(remax.Listing.url, item.id) #tested functionally, works 
-        print(Crawler.get_listing_list_page(url))
-        break
+
+    Crawler.get_listings(remax)
+    HtmlParser.parse_listings(remax.listings)
+    #dataset = DF.convert_dict_df(fields = REMAX_ATTR_KEYS, remax.listings[])
+
 
 
 
