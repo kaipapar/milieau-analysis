@@ -37,30 +37,30 @@ class HtmlParser:
     @staticmethod
     def parse(listing: PropertySite.Listing):
         """ Interface for HTMLparser. Parses one listing page """
-        #pass # unfinished
         #IO.get_file()
-        file = open(listing.filepath) # leaves file open...
+        with open(listing.filepath) as file:
+        #file = open(listing.filepath) # leaves file open...
         #bs = BeautifulSoup(IO.get_file(listing.filepath), 'html.parser') #needs a pointer to the html file.
         #bs = BeautifulSoup(listing.filepath, 'html.parser') #needs a pointer to the html file.
-        bs = BeautifulSoup(file, 'html.parser') #needs a pointer to the html file.
-        print("*****type:", type(listing))
-        print("**another type:", type(Remax.Listing))
+            bs = BeautifulSoup(file, 'html.parser') #needs a pointer to the html file.
+            print("*****type:", type(listing))
+            print("**another type:", type(Remax.Listing))
 
-        match type(listing):
-            case Remax.Listing:
-                print("\nsuccess****")        
-                listing.attr_dict = HtmlParser.get_attributes(
-                    keys=Remax.Listing.attr_keys,
-                    list_value_tag=Remax.Listing.label_value_tag,
-                    bs=bs
-                )
-            case _:
-                print("Not found ***")
-                warn(f"listing variable type handling is unknown: type: {type(listing)}")
-        file.close()
+            match type(listing):
+                case Remax.Listing:
+                    print("\nsuccess****")        
+                    listing.attr_dict = HtmlParser.get_attributes(
+                        keys=Remax.Listing.attr_keys,
+                        list_value_tag=Remax.Listing.label_value_tag,
+                        bs=bs
+                    )
+                case _:
+                    print("Not found ***")
+                    warn(f"listing variable type handling is unknown: type: {type(listing)}")
+        #file.close()
     
     @staticmethod
-    def parse_listings(listings: list[PropertySite.Listing]):
+    def parse_listings(listings: set[PropertySite.Listing]):
         """ cycle through listings and parse them all """
         for listing in listings:
             HtmlParser.parse(listing)
