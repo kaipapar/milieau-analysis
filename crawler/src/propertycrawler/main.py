@@ -13,16 +13,24 @@ from datahandler import IO
 from parser import JsonParser
 from crawler import Crawler
 if __name__ == "__main__":
-    # Process:
-    # get listing list via php request
-    # convert listing list to a set of listing objects
-    # cycle through the listing objects
-    # download each listing as html
-    # parse each html page for attributes
-    # pass all information about a listing into a dataframe
-    # geocode addresses
-    # save as csv
-    
+    """ 
+     1. Enter URL as CLI input (direct link to public content for now)
+     2. Initialize correct PropertySite implementation class
+     3. Start crawling: surf to url and download contents
+     4. Convert /interpret the contents to/as JSON
+     5. Extract listing IDs from the JSON and generate a set from them
+     6. Create Listing type objects from the set
+     7. Surf to each listing's page and download as HTML
+     8. Parse to extract features from the HTML to corresponding listing object
+     9. Pass all listing objects to a dataframe
+     ... TODO check for duplicate addresses in current data and previously generated data 
+            -> minimizes geocoding requests
+     10. Geocode each listing address and add to dataframe
+     ... TODO Add session id to each
+     ... TODO add site id to each
+     11. Save dataframe as CSV
+     12. Voilá
+        """
     args = argparser(argv[1:])
 
     # initialize class instances
