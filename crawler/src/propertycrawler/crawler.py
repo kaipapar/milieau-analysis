@@ -34,7 +34,7 @@ class Crawler:
 
     def get_listings(obj: PropertySite):
         for listing in obj.listings:
-            Crawler.get_listing_page(listing.url, listing.id, f"./data/listings/{listing.id}.html")
+            Crawler.get_listing_page(listing.url, listing.id, listing.filepath)
             
     def get_listing_list_page(url: str, filepath="./data/listings/") -> bool:
         """ retrieve and save listing list page to specified location with wget """
