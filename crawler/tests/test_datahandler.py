@@ -237,3 +237,80 @@ class TestDFClass:
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+
+    def test_add_rows_with_set_of_listings(self, sample_fields):
+        """ Test that add_rows works with a set of listings (as used in PropertySite) """
+        df = pd.DataFrame(columns=sample_fields)
+        
+        # Create a set of listings (remax.listings is a set in actual code)
+        listings_set = set()
+        for i in range(3):
+            listing = Remax.Listing(i)
+            listing.attr_dict = {
+                "id": i,
+                "address": f"Street {i}",
+                "price": 200000 + (i * 10000),
+                "rooms": 2 + i
+            }
+            listings_set.add(listing)
+        
+        df = DF.add_rows(df, listings_set)
+        assert len(df) == 3
+
+    def test_add_rows_handles_missing_attr_dict(self, sample_fields):
+        """ Test that add_rows skips listings with missing attr_dict """
+        df = pd.DataFrame(columns=sample_fields)
+        listings = []
+        
+        # Listing with valid attr_dict
+        listing1 = Remax.Listing(1)
+        listing1.attr_dict = {"id": 1, "address": "Street 1", "price": 200000, "rooms": 2}
+        listings.append(listing1)
+        
+        # Listing with None attr_dict
+        listing2 = Remax.Listing(2)
+        listing2.attr_dict = None
+        listings.append(listing2)
+        
+        # Listing without attr_dict attribute (edge case)
+        listing3 = Remax.Listing(3)
+        listing3.attr_dict = {"id": 3, "address": "Street 3", "price": 220000, "rooms": 3}
+        listings.append(listing3)
+        
+        with pytest.warns(UserWarning, match="attr_dict"):
+            df = DF.add_rows(df, listings)
+        
+        # Should only have 2 rows (listing2 should be skipped)
+        assert len(df) == 2
+
+    def test_add_rows_returns_dataframe(self, sample_fields, sample_listings):
+        """ Test that add_rows returns the modified dataframe """
+        df = pd.DataFrame(columns=sample_fields)
+        result = DF.add_rows(df, sample_listings)
+        
+        assert result is df  # Should be the same object
+        assert len(result) == len(sample_listings)
+
+    def test_add_rows_with_partial_dict_keys(self, sample_fields):
+        """ Test that add_rows handles listings with incomplete attr_dict (missing some keys) """
+        df = pd.DataFrame(columns=sample_fields)
+        
+        listings = []
+        # Listing with all keys
+        listing1 = Remax.Listing(1)
+        listing1.attr_dict = {"id": 1, "address": "Street 1", "price": 200000, "rooms": 2}
+        listings.append(listing1)
+        
+        # Listing with only some keys (pandas should fill NaN for missing keys)
+        listing2 = Remax.Listing(2)
+        listing2.attr_dict = {"id": 2, "address": "Street 2"}  # Missing price and rooms
+        listings.append(listing2)
+        
+        df = DF.add_rows(df, listings)
+        
+        assert len(df) == 2
+        assert df.iloc[0]["id"] == 1
+        assert df.iloc[1]["id"] == 2
+        # Check that missing values are NaN
+        assert pd.isna(df.iloc[1]["price"])
+        assert pd.isna(df.iloc[1]["rooms"])
