@@ -12,7 +12,7 @@ import io
 import os
 import pathlib
 import pandas as pd
-from propertysite import PropertySite
+from propertycrawler.propertysite import PropertySite
 import osmnx as ox
 
 
@@ -65,13 +65,24 @@ class DF:
         """ add row to existing dataframe """
         df.loc[len(df)] = row
 
-    def add_rows(df: pd.DataFrame, listing_list: list[PropertySite.Listing]):
-        """ mass add rows to dataframe """
+    def add_rows(df: pd.DataFrame, listing_list):
+        """ mass add rows to dataframe from listing objects.
+            Works with both list and set of listing objects.
+            Each listing must have an attr_dict attribute. """
         for item in listing_list:
-            DF.add_row(df, item.attr_dict)
+            # Verify item has attr_dict and it's not None
+            if hasattr(item, 'attr_dict') and item.attr_dict is not None:
+                DF.add_row(df, item.attr_dict)
+            else:
+                # Log warning for listings without attr_dict
+                warnings.warn(f"Listing {item.id if hasattr(item, 'id') else 'unknown'} has no attr_dict, skipping")
+        return df
 
     def save(df: pd.DataFrame, path: str):
-        """ save dataframe as csv """
+        """ save dataframe as csv. Creates parent directories if they don't exist. """
+        path = pathlib.Path(path)
+        # Create parent directories if they don't exist
+        path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(path, sep=',')
 
 class GC:
