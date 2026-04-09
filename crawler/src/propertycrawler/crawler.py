@@ -8,8 +8,8 @@
 '''
 
 import subprocess
-from propertysite import PropertySite
-from datahandler import IO
+from propertycrawler.propertysite import PropertySite
+from propertycrawler.datahandler import IO
 import warnings
 import pathlib
 import os
@@ -32,8 +32,16 @@ class Crawler:
         result = subprocess.run(['wget', '-O', f'{str(filepath)}', f'{url}'])
         result.check_returncode() # if return code is nonzero -> raises CalledProcessError
 
-    def get_listings(obj: PropertySite):
+    def get_listings(obj: PropertySite, filepath=None):
+        """ Download all listings from the PropertySite object.
+            If filepath is provided, use it as the base directory for saving listing pages.
+        """
         for listing in obj.listings:
+            # Update listing filepath if a base directory is provided
+            if filepath is not None:
+                listing_dir = pathlib.Path(filepath)
+                listing_dir.mkdir(parents=True, exist_ok=True)
+                listing.filepath = str(listing_dir / f"{listing.id}.html")
             Crawler.get_listing_page(listing.url, listing.id, listing.filepath)
             
     def get_listing_list_page(url: str, filepath="./data/listings/") -> bool:
@@ -62,6 +70,8 @@ class Crawler:
     def get_listing_list_full(url: str, start_pg=0, filepath="/data/listinglist/", separator="&"):
         """ cycle through all pages of listing lists """
         filepath = pathlib.Path(filepath)
+        # Create directory if it doesn't exist
+        filepath.mkdir(parents=True, exist_ok=True)
         page_n = start_pg
         query = separator + "page="
         

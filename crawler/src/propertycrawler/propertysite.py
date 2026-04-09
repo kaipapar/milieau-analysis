@@ -66,7 +66,7 @@ class PropertySite(abc.ABC):
     def populate_listing_list(self,ids:set):
         """ generate listing objects and add them to listings """
         for item in ids:
-            self.listings.add(self.Listing(id=item))
+            self.listings.append(self.Listing(id=item))
 
 
     @abc.abstractmethod
