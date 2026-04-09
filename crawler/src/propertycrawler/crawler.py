@@ -85,4 +85,37 @@ class Crawler:
                 break
             
             page_n += 1
+
+    def get_listing_ids_from_disk(filepath="/data/listinglist/", parser=None):
+        """ retrieve all pages from disk and accumulate IDs from all pages into a single set """
+        filepath = pathlib.Path(filepath)
+        accumulated_ids = set()
+        page_n = 0
+        
+        while (True):
+            filename = filepath / f"page_{page_n}.html"
+            
+            # Check if file exists
+            if not filename.exists():
+                break
+            
+            try:
+                # Read the page file
+                page_data = IO.get_json(filename)
+                
+                # Update parser's json_list with new page data
+                parser.json_list = page_data
+                
+                # Generate IDs from this page and merge into accumulated set
+                page_ids = parser.gen_id_set()
+                accumulated_ids = accumulated_ids.union(page_ids)
+                
+                print(f"Page {page_n}: found {len(page_ids)} IDs, total accumulated: {len(accumulated_ids)}")
+                
+            except Exception as e:
+                warnings.warn(f"Error reading page {page_n}: {e}")
+            
+            page_n += 1
+        
+        return accumulated_ids
         
