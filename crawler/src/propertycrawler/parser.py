@@ -7,12 +7,11 @@
 @Desc: None
 '''
 import json
-from datahandler import IO
+from propertycrawler.datahandler import IO
 from warnings import warn
 from bs4 import BeautifulSoup
 import re
-from propertysite import PropertySite
-from datahandler import IO
+from propertycrawler.propertysite import PropertySite
 
 # need this more verbose import for checking whether listing is instance Remax.Listing
 from propertycrawler.remax import Remax 

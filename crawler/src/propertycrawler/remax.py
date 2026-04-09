@@ -7,8 +7,8 @@
 @Desc: None
 '''
 
-from propertysite import PropertySite
-from constants import REMAX_ATTR_KEYS as ATTR_KEYS
+from propertycrawler.propertysite import PropertySite
+from propertycrawler.constants import REMAX_ATTR_KEYS as ATTR_KEYS
 
 class Remax(PropertySite):
     url="https://remax.fi/myytavat-asunnot/"
