@@ -8,6 +8,7 @@
 '''
 from propertycrawler.crawler import Crawler
 from propertycrawler.datahandler import IO
+from propertycrawler.parser import JsonParser
 from pytest_httpserver import HTTPServer
 from werkzeug.wrappers.response import Response
 from collections.abc import Iterable
@@ -233,3 +234,180 @@ class TestCrawler:
 
             with pytest.raises(FileNotFoundError) as excinfo:
                 file2 = IO.get_json(tmp_path / "page_2.html")
+
+    class TestGetListingIdsFromDisk:
+        """ testing that all page IDs are retrieved and accumulated from disk """
+
+        @pytest.fixture
+        def parser(self):
+            """ provides a reusable JsonParser instance """
+            yield JsonParser([])
+
+        def test_single_page_retrieval(self, tmp_path, parser):
+            """ test that IDs are extracted from a single page_0.html file """
+            # Create page_0.html with test data
+            page_0_data = [
+                {"identifier": "123"},
+                {"identifier": "456"},
+                {"identifier": "789"}
+            ]
+            page_0_file = tmp_path / "page_0.html"
+            with open(page_0_file, 'w') as f:
+                json.dump(page_0_data, f)
+
+            # Call the method
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # Verify all IDs were extracted
+            assert ids == {123, 456, 789}
+
+        def test_multiple_page_accumulation(self, tmp_path, parser):
+            """ test that IDs are accumulated from multiple pages """
+            # Create page_0.html
+            page_0_data = [{"identifier": "100"}, {"identifier": "200"}]
+            with open(tmp_path / "page_0.html", 'w') as f:
+                json.dump(page_0_data, f)
+            
+            # Create page_1.html
+            page_1_data = [{"identifier": "300"}, {"identifier": "400"}]
+            with open(tmp_path / "page_1.html", 'w') as f:
+                json.dump(page_1_data, f)
+            
+            # Create page_2.html
+            page_2_data = [{"identifier": "500"}]
+            with open(tmp_path / "page_2.html", 'w') as f:
+                json.dump(page_2_data, f)
+
+            # Call the method
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # Verify all IDs from all pages are accumulated
+            assert ids == {100, 200, 300, 400, 500}
+
+        def test_stops_at_missing_page(self, tmp_path, parser):
+            """ test that iteration stops when a page file is missing """
+            # Create page_0.html and page_1.html but not page_2.html
+            page_0_data = [{"identifier": "111"}]
+            with open(tmp_path / "page_0.html", 'w') as f:
+                json.dump(page_0_data, f)
+            
+            page_1_data = [{"identifier": "222"}]
+            with open(tmp_path / "page_1.html", 'w') as f:
+                json.dump(page_1_data, f)
+
+            # Call the method (page_2.html doesn't exist)
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # Should only have IDs from page_0 and page_1
+            assert ids == {111, 222}
+
+        def test_parser_reuse(self, tmp_path, parser):
+            """ test that the same parser instance is reused with updated json_list """
+            # Create multiple pages
+            page_0_data = [{"identifier": "10"}]
+            with open(tmp_path / "page_0.html", 'w') as f:
+                json.dump(page_0_data, f)
+            
+            page_1_data = [{"identifier": "20"}]
+            with open(tmp_path / "page_1.html", 'w') as f:
+                json.dump(page_1_data, f)
+
+            # Verify parser starts with empty list
+            assert parser.json_list == []
+
+            # Call the method
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # After the call, parser's json_list should be the last page's data
+            assert parser.json_list == page_1_data
+            assert ids == {10, 20}
+
+        def test_handles_invalid_ids_per_page(self, tmp_path, parser):
+            """ test that invalid IDs (non-integers) are skipped across pages """
+            # Create page_0.html with mixed valid/invalid IDs
+            page_0_data = [
+                {"identifier": "100"},
+                {"identifier": "not_a_number"},
+                {"identifier": "200"}
+            ]
+            with open(tmp_path / "page_0.html", 'w') as f:
+                json.dump(page_0_data, f)
+            
+            # Create page_1.html with more mixed data
+            page_1_data = [
+                {"identifier": "invalid"},
+                {"identifier": "300"}
+            ]
+            with open(tmp_path / "page_1.html", 'w') as f:
+                json.dump(page_1_data, f)
+
+            # Call the method and expect warnings for invalid IDs
+            with pytest.warns(UserWarning, match="Invalid id"):
+                ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # Should only have valid IDs
+            assert ids == {100, 200, 300}
+
+        def test_empty_page_file(self, tmp_path, parser):
+            """ test that an empty page (empty list) is handled correctly """
+            # Create page_0.html with data
+            page_0_data = [{"identifier": "100"}]
+            with open(tmp_path / "page_0.html", 'w') as f:
+                json.dump(page_0_data, f)
+            
+            # Create page_1.html with empty list
+            page_1_data = []
+            with open(tmp_path / "page_1.html", 'w') as f:
+                json.dump(page_1_data, f)
+
+            # Call the method
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # Should have ID from page_0, and page_1 contributes nothing
+            assert ids == {100}
+
+        def test_no_pages_exist(self, tmp_path, parser):
+            """ test that empty set is returned when no page_0.html exists """
+            # Don't create any files
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # Should return empty set
+            assert ids == set()
+
+        def test_duplicate_ids_across_pages(self, tmp_path, parser):
+            """ test that duplicate IDs across pages are handled (set removes duplicates) """
+            # Create page_0.html
+            page_0_data = [{"identifier": "100"}, {"identifier": "200"}]
+            with open(tmp_path / "page_0.html", 'w') as f:
+                json.dump(page_0_data, f)
+            
+            # Create page_1.html with overlapping IDs
+            page_1_data = [{"identifier": "200"}, {"identifier": "300"}]
+            with open(tmp_path / "page_1.html", 'w') as f:
+                json.dump(page_1_data, f)
+
+            # Call the method
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # Set should automatically deduplicate
+            assert ids == {100, 200, 300}
+            assert len(ids) == 3
+
+        def test_string_number_conversion(self, tmp_path, parser):
+            """ test that string numbers are converted to integers across pages """
+            # Create page_0.html with string numbers
+            page_0_data = [{"identifier": "100"}]
+            with open(tmp_path / "page_0.html", 'w') as f:
+                json.dump(page_0_data, f)
+            
+            # Create page_1.html with string numbers
+            page_1_data = [{"identifier": "200"}]
+            with open(tmp_path / "page_1.html", 'w') as f:
+                json.dump(page_1_data, f)
+
+            # Call the method
+            ids = Crawler.get_listing_ids_from_disk(filepath=tmp_path, parser=parser)
+            
+            # All IDs should be integers
+            assert all(isinstance(id, int) for id in ids)
+            assert ids == {100, 200}
