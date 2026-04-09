@@ -6,8 +6,11 @@ build-backend = "hatchling.build"
 name = "propertycrawler"
 version = "0.1"
 
+[project.scripts]
+propertycrawler = "propertycrawler:main"
+
 [tool.hatch.build.targets.wheel]
-      packages = ["."]
+packages = ["src/propertycrawler"]
 
 [tool.pytest.ini_options]
 pythonpath = [
