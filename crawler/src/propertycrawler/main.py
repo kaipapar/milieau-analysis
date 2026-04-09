@@ -50,10 +50,11 @@ if __name__ == "__main__":
 
     # filepath should be specified to sessionID
     Crawler.get_listing_list_full(url = remax.php_query_url)
-    listings = IO.get_json('/data/listinglist/page_0.html') # only gets page_0 for now, need to cycle
+    # Create parser instance and retrieve all IDs from all pages on disk
+    json = JsonParser([])  # Start with empty list, will be updated per page
+    all_ids = Crawler.get_listing_ids_from_disk(parser=json)
     # process the retrieved json containing the listings into a more compact list of Listing objects
-    json = JsonParser(listings)
-    remax.populate_listing_list(json.gen_id_set())
+    remax.populate_listing_list(all_ids)
     print(remax.listings)
 
     Crawler.get_listings(remax)
