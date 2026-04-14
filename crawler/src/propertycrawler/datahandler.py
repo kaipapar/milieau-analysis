@@ -86,14 +86,30 @@ class DF:
         df.to_csv(path, sep=',')
 
 class GC:
-    def geocode(address: str):
+    def geocode(address: str) -> tuple | None:
         coordinates = None
         try:
-            coordinates = ox.geocoder.geocode_to_gdf(address)
+            coordinates = ox.geocoder.geocode(address)
         except Exception as e:
             print(e)
         return coordinates
 
     def geocode_all(df: pd.DataFrame, addr_name: str):
-        for row in df:
-            row['geo'] = GC.geocode(row[addr_name])
+        """Geocode all addresses in dataframe and add latitude and longitude columns to each row.
+        
+        Args:
+            df: DataFrame with address column
+            addr_name: Name of the column containing addresses
+            
+        Returns:
+            Updated dataframe with latitude and longitude columns appended
+        """
+        for idx, row in df.iterrows():
+            coords = GC.geocode(row[addr_name])
+            if coords is not None:
+                lat, lon = coords
+                df.loc[idx, 'latitude'] = lat
+                df.loc[idx, 'longitude'] = lon
+            else:
+                warnings.warn(f"Geocoding failed for address: {row[addr_name]}")
+        return df
