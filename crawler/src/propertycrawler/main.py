@@ -86,8 +86,6 @@ if __name__ == "__main__":
      ... TODO check for duplicate addresses in current data and previously generated data 
             -> minimizes geocoding requests
      10. Geocode each listing address and add to dataframe
-     ... TODO Add session id to each
-     ... TODO add site id to each
      11. Save dataframe as CSV
      12. Voilá
         """
