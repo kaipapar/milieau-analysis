@@ -174,7 +174,7 @@ class TestDFClass:
         initial_length = len(df)
         
         new_row = {"id": 2, "address": "Oak Ave", "price": 300000, "rooms": 4}
-        DF.add_row(df, new_row)
+        df = DF.add_row(df, new_row)
         
         assert len(df) == initial_length + 1
 
@@ -182,24 +182,25 @@ class TestDFClass:
         """ Test that add_row adds data correctly """
         df = DF.convert_dict_df(sample_fields, sample_dict)
         new_row = {"id": 2, "address": "Oak Ave", "price": 300000, "rooms": 4}
-        DF.add_row(df, new_row)
+        df = DF.add_row(df, new_row)
         
         assert df.iloc[1]["id"] == 2
         assert df.iloc[1]["address"] == "Oak Ave"
 
     def test_add_rows_adds_multiple_rows(self, sample_fields, sample_listings):
         """ Test that add_rows adds multiple rows from listings """
-        df = DF.convert_dict_df(sample_fields, {})
+        df = pd.DataFrame(columns=sample_fields)
         initial_length = len(df)
         
-        DF.add_rows(df, sample_listings)
+        df = DF.add_rows(df, sample_listings, session_id="2026-04-09_14-30-45")
         
         assert len(df) == initial_length + len(sample_listings)
 
     def test_add_rows_adds_all_listings_data(self, sample_fields, sample_listings):
         """ Test that add_rows correctly adds all listing data """
-        df = DF.convert_dict_df(sample_fields, {})
-        DF.add_rows(df, sample_listings)
+        df = pd.DataFrame(columns=sample_fields)
+        session_id = "2026-04-09_14-30-45"
+        df = DF.add_rows(df, sample_listings, session_id=session_id)
         
         # Check that all listings were added
         for i, listing in enumerate(sample_listings):
@@ -241,6 +242,7 @@ class TestDFClass:
     def test_add_rows_with_set_of_listings(self, sample_fields):
         """ Test that add_rows works with a set of listings (as used in PropertySite) """
         df = pd.DataFrame(columns=sample_fields)
+        session_id = "2026-04-09_14-30-45"
         
         # Create a set of listings (remax.listings is a set in actual code)
         listings_set = set()
@@ -254,12 +256,13 @@ class TestDFClass:
             }
             listings_set.add(listing)
         
-        df = DF.add_rows(df, listings_set)
+        df = DF.add_rows(df, listings_set, session_id=session_id)
         assert len(df) == 3
 
     def test_add_rows_handles_missing_attr_dict(self, sample_fields):
         """ Test that add_rows skips listings with missing attr_dict """
         df = pd.DataFrame(columns=sample_fields)
+        session_id = "2026-04-09_14-30-45"
         listings = []
         
         # Listing with valid attr_dict
@@ -278,22 +281,23 @@ class TestDFClass:
         listings.append(listing3)
         
         with pytest.warns(UserWarning, match="attr_dict"):
-            df = DF.add_rows(df, listings)
+            df = DF.add_rows(df, listings, session_id=session_id)
         
         # Should only have 2 rows (listing2 should be skipped)
         assert len(df) == 2
 
     def test_add_rows_returns_dataframe(self, sample_fields, sample_listings):
-        """ Test that add_rows returns the modified dataframe """
+        """ Test that add_rows returns a dataframe with correct data """
         df = pd.DataFrame(columns=sample_fields)
-        result = DF.add_rows(df, sample_listings)
+        result = DF.add_rows(df, sample_listings, session_id="2026-04-09_14-30-45")
         
-        assert result is df  # Should be the same object
+        assert isinstance(result, pd.DataFrame)
         assert len(result) == len(sample_listings)
 
     def test_add_rows_with_partial_dict_keys(self, sample_fields):
         """ Test that add_rows handles listings with incomplete attr_dict (missing some keys) """
         df = pd.DataFrame(columns=sample_fields)
+        session_id = "2026-04-09_14-30-45"
         
         listings = []
         # Listing with all keys
@@ -306,7 +310,7 @@ class TestDFClass:
         listing2.attr_dict = {"id": 2, "address": "Street 2"}  # Missing price and rooms
         listings.append(listing2)
         
-        df = DF.add_rows(df, listings)
+        df = DF.add_rows(df, listings, session_id=session_id)
         
         assert len(df) == 2
         assert df.iloc[0]["id"] == 1
@@ -314,3 +318,39 @@ class TestDFClass:
         # Check that missing values are NaN
         assert pd.isna(df.iloc[1]["price"])
         assert pd.isna(df.iloc[1]["rooms"])
+
+    def test_add_rows_adds_site_id_from_class(self, sample_listings):
+        """ Test that add_rows correctly extracts and adds siteID from listing class """
+        df = pd.DataFrame()
+        session_id = "2026-04-09_14-30-45"
+        
+        df = DF.add_rows(df, sample_listings, session_id=session_id)
+        
+        # All rows should have siteID extracted from Remax class
+        assert "siteID" in df.columns
+        for i in range(len(df)):
+            assert df.iloc[i]["siteID"] == "remax"
+
+    def test_add_rows_adds_session_id(self, sample_listings):
+        """ Test that add_rows correctly adds sessionID to each row """
+        df = pd.DataFrame()
+        session_id = "2026-04-09_14-30-45"
+        
+        df = DF.add_rows(df, sample_listings, session_id=session_id)
+        
+        # All rows should have the provided sessionID
+        assert "sessionID" in df.columns
+        for i in range(len(df)):
+            assert df.iloc[i]["sessionID"] == session_id
+
+    def test_add_rows_adds_listing_id(self, sample_listings):
+        """ Test that add_rows correctly adds listingID from each listing object """
+        df = pd.DataFrame()
+        session_id = "2026-04-09_14-30-45"
+        
+        df = DF.add_rows(df, sample_listings, session_id=session_id)
+        
+        # Each row should have the corresponding listing ID
+        assert "listingID" in df.columns
+        for i, listing in enumerate(sample_listings):
+            assert df.iloc[i]["listingID"] == listing.id

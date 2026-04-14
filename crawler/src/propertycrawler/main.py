@@ -62,8 +62,8 @@ def main():
     
     # Create dataframe with proper column structure
     dataset = pd.DataFrame(columns=REMAX_ATTR_KEYS)
-    # Add all listing rows to dataframe
-    dataset = DF.add_rows(dataset, remax.listings)
+    # Add all listing rows to dataframe (this includes siteID, sessionID, and listingID)
+    dataset = DF.add_rows(dataset, remax.listings, session_id)
     # try to geocode all
     GC.geocode_all(dataset, REMAX_ATTR_KEYS[0]) # [0] == "Osoite: "
     # Save to CSV in the session directory

@@ -62,17 +62,40 @@ class DF:
         return df
         
     def add_row(df: pd.DataFrame, row: dict):
-        """ add row to existing dataframe """
-        df.loc[len(df)] = row
+        """ add row to existing dataframe 
+            Handles dynamic column creation for empty dataframes
+        """
+        # Create a new dataframe from the single row
+        new_row_df = pd.DataFrame([row])
+        # Concatenate with existing dataframe, ignoring index
+        return pd.concat([df, new_row_df], ignore_index=True)
 
-    def add_rows(df: pd.DataFrame, listing_list):
+    def add_rows(df: pd.DataFrame, listing_list, session_id: str):
         """ mass add rows to dataframe from listing objects.
             Works with both list and set of listing objects.
-            Each listing must have an attr_dict attribute. """
+            Each listing must have an attr_dict attribute.
+            Automatically adds siteID, sessionID, and listingID to each row.
+            
+            Args:
+                df: DataFrame to add rows to
+                listing_list: List or set of listing objects
+                session_id: Session ID to add to each row
+                
+            Returns:
+                Updated dataframe with all rows added
+        """
         for item in listing_list:
             # Verify item has attr_dict and it's not None
             if hasattr(item, 'attr_dict') and item.attr_dict is not None:
-                DF.add_row(df, item.attr_dict)
+                # Extract site ID from listing class (e.g., "Remax.Listing" -> "remax")
+                site_id = item.__class__.__qualname__.split('.')[0].lower()
+                
+                # Add identifiers to the row
+                item.attr_dict['siteID'] = site_id
+                item.attr_dict['sessionID'] = session_id
+                item.attr_dict['listingID'] = item.id
+                
+                df = DF.add_row(df, item.attr_dict)
             else:
                 # Log warning for listings without attr_dict
                 warnings.warn(f"Listing {item.id if hasattr(item, 'id') else 'unknown'} has no attr_dict, skipping")
