@@ -19,12 +19,24 @@ from propertycrawler.remax import Remax
 class HtmlParser:
     """ Logic parsing propertylisting html """
     @staticmethod
+    def _clean_string(value: str) -> str:
+        """Strip newlines, tabs, and commas from string while preserving Finnish characters (ä, ö, å)"""
+        if value is None:
+            return None
+        # Remove newlines, tabs, and commas
+        cleaned = value.replace('\n', ' ').replace('\t', ' ').replace(',', '')
+        # Strip leading and trailing whitespace
+        return cleaned.strip()
+    
+    @staticmethod
     def get_attributes(keys: list, list_value_tag: tuple, bs: BeautifulSoup) -> dict:
         new_dict = {}
         for item in keys:
             label = bs.find("div", string=re.compile(item))
             try:
-                new_dict[label.get_text()] = label.parent.find_next(list_value_tag[0], list_value_tag[1]).get_text()
+                raw_value = label.parent.find_next(list_value_tag[0], list_value_tag[1]).get_text()
+                cleaned_value = HtmlParser._clean_string(raw_value)
+                new_dict[label.get_text()] = cleaned_value
             except AttributeError: # the label hasn't been found -> add the key value pair as default
                 # new_dict.setdefault(item)
                 new_dict[item] = None

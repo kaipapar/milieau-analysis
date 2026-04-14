@@ -187,5 +187,15 @@ class TestParser:
             # Should not raise any exception
             HtmlParser.parse_listings(listings)
 
+        def test_clean_string_removes_special_characters(self):
+            """ Test that _clean_string removes newlines, tabs, and commas while preserving Finnish characters """
+            # Test string with newlines, tabs, commas, and Finnish characters
+            dirty_string = "Kaunis\nkoti\twith,\nspätzial käräktäriä\tja,\nmuita\n"
+            expected_clean = "Kaunis koti with spätzial käräktäriä ja muita"
+            
+            actual_clean = HtmlParser._clean_string(dirty_string)
+            
+            assert actual_clean == expected_clean, f"Expected '{expected_clean}', got '{actual_clean}'"
+
         def test_generate_multiple_listings(self):
             pass
