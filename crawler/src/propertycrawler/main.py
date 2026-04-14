@@ -13,6 +13,7 @@ from propertycrawler.datahandler import IO
 from propertycrawler.parser import JsonParser
 from propertycrawler.parser import HtmlParser
 from propertycrawler.datahandler import DF
+from propertycrawler.datahandler import GC
 from propertycrawler.crawler import Crawler
 from propertycrawler.constants import REMAX_ATTR_KEYS
 import pandas as pd
@@ -63,9 +64,11 @@ def main():
     dataset = pd.DataFrame(columns=REMAX_ATTR_KEYS)
     # Add all listing rows to dataframe
     dataset = DF.add_rows(dataset, remax.listings)
-    print(dataset)
+    # try to geocode all
+    GC.geocode_all(dataset, REMAX_ATTR_KEYS[0]) # [0] == "Osoite: "
     # Save to CSV in the session directory
     csv_path = pathlib.Path(base_data_path) / f"{site_id}_{session_id}.csv"
+    print(f"***Geocoding done. Printing generated dataset and saving to disk at: \n {str(csv_path)} \n {dataset}")
     DF.save(dataset, str(csv_path))
 
 
