@@ -1,94 +1,228 @@
 '''
 @File: main.py
-@Time: 05.12.2025 17:16:41
+@Time: 2026-04-20
 @Author: Karri Korsu 
-@Version : 1.0
+@Version : 2.0
 @Contact : kkorsu@gmail.com
-@Desc: None
+@Desc: Main entry point for property crawler. Supports both legacy full-pipeline and new modular step execution.
 '''
-from sys import argv
-from propertycrawler.remax import Remax
-from propertycrawler.cli import argparser
-from propertycrawler.datahandler import IO
-from propertycrawler.parser import JsonParser
-from propertycrawler.parser import HtmlParser
-from propertycrawler.datahandler import DF
-from propertycrawler.datahandler import GC
-from propertycrawler.crawler import Crawler
-from propertycrawler.constants import REMAX_ATTR_KEYS
-import pandas as pd
-from datetime import datetime
-import pathlib
+
+import sys
+import warnings
+from typing import List, Optional
+
+from propertycrawler.cli import argparser, CLIArgs
+from propertycrawler.execution_context import ExecutionContext
+from propertycrawler.steps import STEP_REGISTRY, validate_step_sequence
 
 
-def main():
-    """ Main crawler execution function """
-    args = argparser(argv[1:])
-    # initialize class instances
-    remax = Remax()
-    # set the url from cli arguments as the url to be used
-    remax.php_query_url = args.url
+class StepExecutionError(Exception):
+    """Raised when a step fails to execute."""
+    pass
 
-    # Generate site ID and session ID for organizing output files
-    site_id = remax.__class__.__name__.lower()  # e.g., "remax"
-    session_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # e.g., "2026-04-09_14-30-45"
-    base_data_path = f"./data/{site_id}/{session_id}/"
+
+class StepDependencyError(Exception):
+    """Raised when step dependencies are not satisfied."""
+    pass
+
+
+def expand_step_range(starting_step: str) -> List[str]:
+    """
+    Expand a starting step to include all following steps.
     
-    print(f"Starting crawl session: site_id={site_id}, session_id={session_id}")
-    print(f"Output directory: {base_data_path}")
+    Args:
+        starting_step: Single step ID (a-h)
+        
+    Returns:
+        List of steps from starting_step to 'h'
+    """
+    all_steps = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    idx = all_steps.index(starting_step)
+    return all_steps[idx:]
 
-    ## for functional testing
-    #url = "https://remax.fi/wp-content/themes/blocksy-child/property_search_LINEAR.php?property-type=asunnot&realty-type=&bedrooms=&showings-from=&showings-to=&location=turku&price_min=&price_max=&living_area_m2_min=&living_area_m2_max=&lot_area_min=&lot_area_max=&buildyear_min=&buildyear_max=&location=turku"
 
-    """ 
-    listings = IO.get_json("data/property_search_LINEAR.php.html")
-    print(listings) """
-    ## 
-
-    # filepath should be specified to sessionID
-    listing_list_path = pathlib.Path(base_data_path) / "listing_lists"
-    Crawler.get_listing_list_full(url=remax.php_query_url, filepath=str(listing_list_path))
-    # Create parser instance and retrieve all IDs from all pages on disk
-    json = JsonParser([])  # Start with empty list, will be updated per page
-    all_ids = Crawler.get_listing_ids_from_disk(filepath=str(listing_list_path), parser=json)
-    # process the retrieved json containing the listings into a more compact list of Listing objects
-    remax.populate_listing_list(all_ids)
-    print(remax.listings)
-
-    # Download individual listing pages to session directory
-    listings_path = pathlib.Path(base_data_path) / "listings"
-    Crawler.get_listings(remax, filepath=str(listings_path))
-    HtmlParser.parse_listings(remax.listings)
+def execute_full_pipeline(url: str, context: ExecutionContext, verbose: bool = False) -> None:
+    """
+    Execute the full crawling pipeline (a → h).
     
-    # Create dataframe with proper column structure
-    dataset = pd.DataFrame(columns=REMAX_ATTR_KEYS)
-    # Add all listing rows to dataframe (this includes siteID, sessionID, and listingID)
-    dataset = DF.add_rows(dataset, remax.listings, session_id)
-    # try to geocode all
-    GC.geocode_all(dataset, REMAX_ATTR_KEYS[0]) # [0] == "Osoite: "
-    # Save to CSV in the session directory
-    csv_path = pathlib.Path(base_data_path) / f"{site_id}_{session_id}.csv"
-    print(f"***Geocoding done. Printing generated dataset and saving to disk at: \n {str(csv_path)} \n {dataset}")
-    DF.save(dataset, str(csv_path))
+    Args:
+        url: PHP listing query URL
+        context: ExecutionContext for state management
+        verbose: Print results after each step
+        
+    Raises:
+        StepExecutionError: If any step fails
+    """
+    print(f"\n{'='*70}")
+    print(f"Starting FULL pipeline")
+    print(f"{'='*70}\n")
+    
+    # Full pipeline: a → b → c → d → e → g → h (skipping f by default)
+    steps_to_run = ['a', 'b', 'c', 'd', 'e', 'g', 'h']
+    
+    context.ensure_session_dir()
+    
+    try:
+        for step_id in steps_to_run:
+            step = STEP_REGISTRY[step_id]
+            print(f"\n▶ Executing Step {step_id.upper()}: {step.name}")
+            print(f"-{'-'*68}")
+            
+            try:
+                # Execute step with appropriate arguments
+                if step_id == 'a':
+                    step.execute(context, url=url)
+                elif step_id == 'b':
+                    step.execute(context, listing_list_dir=None)
+                elif step_id == 'c':
+                    step.execute(context)
+                elif step_id == 'd':
+                    step.execute(context, listing_dir=None)
+                else:  # e, g, h
+                    step.execute(context)
+                
+                # Print result if verbose
+                if verbose:
+                    print(f"✓ Step {step_id.upper()} completed successfully")
+                    
+            except Exception as e:
+                raise StepExecutionError(f"Step {step_id.upper()} failed: {e}")
+        
+        print(f"\n{'='*70}")
+        print(f"✓ Full pipeline completed successfully!")
+        print(f"Output: {context.get_csv_output_path()}")
+        print(f"{'='*70}\n")
+        
+    except StepExecutionError as e:
+        print(f"\n✗ Pipeline failed: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def execute_step_pipeline(steps_to_run: List[str], cli_args: CLIArgs, 
+                         context: ExecutionContext, verbose: bool = False) -> None:
+    """
+    Execute a specific sequence of steps with user-provided arguments.
+    
+    Args:
+        steps_to_run: List of step IDs to execute (e.g., ['d', 'e', 'g'])
+        cli_args: CLIArgs with step-specific options
+        context: ExecutionContext for state management
+        verbose: Print results after each step
+        
+    Raises:
+        StepExecutionError: If any step fails
+        StepDependencyError: If dependencies are not satisfied
+    """
+    print(f"\n{'='*70}")
+    print(f"Starting STEP pipeline: {', '.join(steps_to_run).upper()}")
+    print(f"{'='*70}\n")
+    
+    # Validate step sequence
+    is_valid, error = validate_step_sequence(steps_to_run)
+    if not is_valid:
+        print(f"\n✗ Invalid step sequence: {error}", file=sys.stderr)
+        print(f"Hint: Check that all dependencies are satisfied or provided explicitly.", file=sys.stderr)
+        sys.exit(1)
+    
+    context.ensure_session_dir()
+    
+    try:
+        for step_id in steps_to_run:
+            step = STEP_REGISTRY[step_id]
+            print(f"\n▶ Executing Step {step_id.upper()}: {step.name}")
+            print(f"-{'-'*68}")
+            
+            try:
+                # Check if dependencies are satisfied
+                if not step.validate_dependencies(context):
+                    missing = step.dependencies
+                    raise StepDependencyError(
+                        f"Step {step_id} requires input from step(s) {missing}. "
+                        f"Either run those steps first or provide explicit input via flags."
+                    )
+                
+                # Execute step with user-provided arguments
+                if step_id == 'a':
+                    if not cli_args.url:
+                        raise ValueError("Step a requires --url argument")
+                    step.execute(context, url=cli_args.url)
+                    
+                elif step_id == 'b':
+                    step.execute(context, listing_list_dir=cli_args.listing_list_dir)
+                    
+                elif step_id == 'c':
+                    step.execute(context)
+                    
+                elif step_id == 'd':
+                    step.execute(context, listing_dir=cli_args.listing_dir)
+                    
+                elif step_id == 'e':
+                    step.execute(context)
+                    
+                elif step_id == 'f':
+                    step.execute(context, dedup_csv=cli_args.dedup_csv)
+                    
+                elif step_id == 'g':
+                    step.execute(context)
+                    
+                elif step_id == 'h':
+                    step.execute(context, output_path=cli_args.output_path)
+                
+                # Print result if verbose
+                if verbose:
+                    print(f"✓ Step {step_id.upper()} completed successfully")
+                    
+            except (StepDependencyError, ValueError) as e:
+                raise StepExecutionError(str(e))
+            except Exception as e:
+                raise StepExecutionError(f"Step {step_id.upper()} failed: {e}")
+        
+        print(f"\n{'='*70}")
+        print(f"✓ Step pipeline completed successfully!")
+        if 'h' in steps_to_run:
+            print(f"Output: {context.get_csv_output_path(cli_args.output_path)}")
+        print(f"{'='*70}\n")
+        
+    except StepExecutionError as e:
+        print(f"\n✗ Pipeline failed: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def main() -> None:
+    """Main entry point for the crawler application."""
+    try:
+        cli_args = argparser(sys.argv[1:])
+    except SystemExit as e:
+        if e.code != 0:
+            raise
+        sys.exit(0)
+    
+    # Initialize execution context
+    context = ExecutionContext(
+        session_id=cli_args.session_id,
+        base_data_path=cli_args.base_dir
+    )
+    
+    if cli_args.command == 'full':
+        # Execute full pipeline (backward compatible)
+        execute_full_pipeline(cli_args.url, context, verbose=cli_args.verbose)
+    
+    elif cli_args.command == 'step':
+        # Expand step range if starting step given without -o
+        steps_to_run = cli_args.steps
+        if not cli_args.only and len(cli_args.steps) == 1:
+            # Expand from starting step to end
+            steps_to_run = expand_step_range(cli_args.steps[0])
+        
+        # Execute step pipeline
+        execute_step_pipeline(steps_to_run, cli_args, context, verbose=cli_args.verbose)
+    
+    else:
+        print("Error: Unknown command", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    """ 
-     1. Enter URL as CLI input (direct link to public content for now)
-     2. Initialize correct PropertySite implementation class
-     3. Start crawling: surf to url and download contents
-     4. Convert /interpret the contents to/as JSON
-     5. Extract listing IDs from the JSON and generate a set from them
-     6. Create Listing type objects from the set
-     7. Surf to each listing's page and download as HTML
-     8. Parse to extract features from the HTML to corresponding listing object
-     9. Pass all listing objects to a dataframe
-     ... TODO check for duplicate addresses in current data and previously generated data 
-            -> minimizes geocoding requests
-     10. Geocode each listing address and add to dataframe
-     11. Save dataframe as CSV
-     12. Voilá
-        """
     main()
 
 

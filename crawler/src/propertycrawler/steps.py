@@ -238,12 +238,13 @@ class StepD(Step):
             context.remax = Remax()
             # Reconstruct listings from HTML files in the directory
             for html_file in sorted(list_path.glob("*.html")):
-                listing_id = html_file.stem
                 try:
-                    listing = context.remax.create_listing(int(listing_id))
+                    listing_id = int(html_file.stem)
+                    listing = context.remax.Listing(id=listing_id)
                     listing.filepath = str(html_file)
                     context.remax.listings.add(listing)
                 except (ValueError, AttributeError):
+                    warnings.warn(f"Could not parse listing ID from filename: {html_file.name}")
                     continue
 
         print(f"[Step D] Parsing {len(context.remax.listings)} listing pages")
