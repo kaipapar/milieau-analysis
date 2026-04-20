@@ -71,19 +71,15 @@ def execute_full_pipeline(url: str, context: ExecutionContext, verbose: bool = F
             try:
                 # Execute step with appropriate arguments
                 if step_id == 'a':
-                    step.execute(context, url=url)
+                    step.execute(context, url=url, verbose=verbose)
                 elif step_id == 'b':
-                    step.execute(context, listing_list_dir=None)
+                    step.execute(context, listing_list_dir=None, verbose=verbose)
                 elif step_id == 'c':
-                    step.execute(context)
+                    step.execute(context, verbose=verbose)
                 elif step_id == 'd':
-                    step.execute(context, listing_dir=None)
+                    step.execute(context, listing_dir=None, verbose=verbose)
                 else:  # e, g, h
-                    step.execute(context)
-                
-                # Print result if verbose
-                if verbose:
-                    print(f"✓ Step {step_id.upper()} completed successfully")
+                    step.execute(context, verbose=verbose)
                     
             except Exception as e:
                 raise StepExecutionError(f"Step {step_id.upper()} failed: {e}")
@@ -145,28 +141,28 @@ def execute_step_pipeline(steps_to_run: List[str], cli_args: CLIArgs,
                 if step_id == 'a':
                     if not cli_args.url:
                         raise ValueError("Step a requires --url argument")
-                    step.execute(context, url=cli_args.url)
+                    step.execute(context, url=cli_args.url, verbose=verbose)
                     
                 elif step_id == 'b':
-                    step.execute(context, listing_list_dir=cli_args.listing_list_dir)
+                    step.execute(context, listing_list_dir=cli_args.listing_list_dir, verbose=verbose)
                     
                 elif step_id == 'c':
-                    step.execute(context)
+                    step.execute(context, verbose=verbose)
                     
                 elif step_id == 'd':
-                    step.execute(context, listing_dir=cli_args.listing_dir)
+                    step.execute(context, listing_dir=cli_args.listing_dir, verbose=verbose)
                     
                 elif step_id == 'e':
-                    step.execute(context)
+                    step.execute(context, verbose=verbose)
                     
                 elif step_id == 'f':
-                    step.execute(context, dedup_csv=cli_args.dedup_csv)
+                    step.execute(context, dedup_csv=cli_args.dedup_csv, verbose=verbose)
                     
                 elif step_id == 'g':
-                    step.execute(context)
+                    step.execute(context, verbose=verbose)
                     
                 elif step_id == 'h':
-                    step.execute(context, output_path=cli_args.output_path)
+                    step.execute(context, output_path=cli_args.output_path, verbose=verbose)
                 
                 # Print result if verbose
                 if verbose:

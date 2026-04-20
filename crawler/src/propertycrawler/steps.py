@@ -42,12 +42,13 @@ class Step(ABC):
         self.dependencies = dependencies
 
     @abstractmethod
-    def execute(self, context: ExecutionContext) -> None:
+    def execute(self, context: ExecutionContext, verbose: bool = False) -> None:
         """
         Execute the step, updating the context with results.
 
         Args:
             context: ExecutionContext object to read from and update
+            verbose: Print detailed results after execution
 
         Raises:
             Various exceptions depending on step implementation
@@ -81,13 +82,14 @@ class StepA(Step):
             dependencies=[]
         )
 
-    def execute(self, context: ExecutionContext, url: str) -> None:
+    def execute(self, context: ExecutionContext, url: str, verbose: bool = False) -> None:
         """
         Download listing list pages using wget.
 
         Args:
             context: ExecutionContext for session info
             url: PHP listing query URL to crawl
+            verbose: Print detailed results after execution
 
         Raises:
             ValueError: If URL is invalid
@@ -121,13 +123,14 @@ class StepB(Step):
             dependencies=["a"]
         )
 
-    def execute(self, context: ExecutionContext, listing_list_dir: Optional[str] = None) -> None:
+    def execute(self, context: ExecutionContext, listing_list_dir: Optional[str] = None, verbose: bool = False) -> None:
         """
         Parse listing list files from disk and extract IDs.
 
         Args:
             context: ExecutionContext for session info
             listing_list_dir: Override path to listing_lists directory. If None, uses context path.
+            verbose: Print detailed results (listing objects) after execution
 
         Raises:
             FileNotFoundError: If listing_lists directory doesn't exist
@@ -156,6 +159,12 @@ class StepB(Step):
 
         print(f"[Step B] ✓ Extracted {len(listing_ids)} property IDs")
         print(f"[Step B] ✓ Created {len(remax.listings)} Listing objects")
+        
+        # Print detailed results if verbose
+        if verbose:
+            print(f"\n[Step B] Listing objects:")
+            for idx, listing in enumerate(sorted(remax.listings, key=lambda x: x.id), 1):
+                print(f"  {idx}. Listing ID: {listing.id}")
 
     def validate_dependencies(self, context: ExecutionContext) -> bool:
         """Step B can run standalone if given an explicit directory."""
@@ -175,12 +184,13 @@ class StepC(Step):
             dependencies=["b"]
         )
 
-    def execute(self, context: ExecutionContext) -> None:
+    def execute(self, context: ExecutionContext, verbose: bool = False) -> None:
         """
         Download HTML pages for each property listing.
 
         Args:
             context: ExecutionContext containing Remax object with listings
+            verbose: Print detailed results after execution
 
         Raises:
             ValueError: If context doesn't have remax object
@@ -215,13 +225,14 @@ class StepD(Step):
             dependencies=["c"]
         )
 
-    def execute(self, context: ExecutionContext, listing_dir: Optional[str] = None) -> None:
+    def execute(self, context: ExecutionContext, listing_dir: Optional[str] = None, verbose: bool = False) -> None:
         """
         Parse listing HTML files and extract attributes.
 
         Args:
             context: ExecutionContext for session info
             listing_dir: Override path to listings directory. If None, uses context path.
+            verbose: Print detailed results after execution
 
         Raises:
             FileNotFoundError: If listings directory doesn't exist or is empty
@@ -274,12 +285,13 @@ class StepE(Step):
             dependencies=["d"]
         )
 
-    def execute(self, context: ExecutionContext) -> None:
+    def execute(self, context: ExecutionContext, verbose: bool = False) -> None:
         """
         Create DataFrame from listing objects and geocode.
 
         Args:
             context: ExecutionContext containing parsed listings
+            verbose: Print detailed results after execution
 
         Raises:
             ValueError: If context doesn't have listings
@@ -321,13 +333,14 @@ class StepF(Step):
             dependencies=["e"]
         )
 
-    def execute(self, context: ExecutionContext, dedup_csv: Optional[str] = None) -> None:
+    def execute(self, context: ExecutionContext, dedup_csv: Optional[str] = None, verbose: bool = False) -> None:
         """
         Remove duplicate listings from DataFrame, optionally comparing with existing data.
 
         Args:
             context: ExecutionContext containing DataFrame
             dedup_csv: Optional CSV file path to load and compare duplicates against
+            verbose: Print detailed results after execution
 
         Raises:
             ValueError: If context doesn't have DataFrame
@@ -376,12 +389,13 @@ class StepG(Step):
             dependencies=["e"]
         )
 
-    def execute(self, context: ExecutionContext) -> None:
+    def execute(self, context: ExecutionContext, verbose: bool = False) -> None:
         """
         Geocode all addresses in DataFrame.
 
         Args:
             context: ExecutionContext containing DataFrame
+            verbose: Print detailed results after execution
 
         Raises:
             ValueError: If context doesn't have DataFrame
@@ -418,13 +432,14 @@ class StepH(Step):
             dependencies=["e"]
         )
 
-    def execute(self, context: ExecutionContext, output_path: Optional[str] = None) -> None:
+    def execute(self, context: ExecutionContext, output_path: Optional[str] = None, verbose: bool = False) -> None:
         """
         Save DataFrame to CSV file.
 
         Args:
             context: ExecutionContext containing DataFrame
             output_path: Custom output CSV path. If None, uses default session path.
+            verbose: Print detailed results after execution
 
         Raises:
             ValueError: If context doesn't have DataFrame

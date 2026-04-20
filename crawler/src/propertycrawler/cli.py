@@ -169,8 +169,15 @@ def argparser(args: List[str]) -> CLIArgs:
         CLIArgs object with validated arguments
         
     Raises:
+        TypeError: If args are not strings
         SystemExit: If arguments are invalid (argparse handles this)
     """
+    # Validate that all args are strings
+    if args:
+        for arg in args:
+            if not isinstance(arg, str):
+                raise TypeError(f"All arguments must be strings, got {type(arg).__name__}")
+    
     # Backward compatibility: if first arg is a URL (not a command), prepend 'full'
     if args and args[0].startswith('http'):
         args = ['full'] + args

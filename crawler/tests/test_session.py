@@ -74,7 +74,7 @@ class TestDirectoryCreation:
         remax = Remax()
         # Create a listing
         listing = Remax.Listing(123)
-        remax.listings.append(listing)
+        remax.listings.add(listing)
         
         # Use a nested path structure
         listings_dir = tmp_path / "data" / "remax" / "2026-04-09_14-30-45" / "listings"

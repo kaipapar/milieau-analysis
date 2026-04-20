@@ -1,10 +1,10 @@
 '''
 @File: test_cli.py
-@Time: 08.12.2025 15:19:02
+@Time: 2026-04-20
 @Author: Karri Korsu 
-@Version : 1.0
+@Version : 2.0
 @Contact : kkorsu@gmail.com
-@Desc: None
+@Desc: Tests for backward compatibility with old CLI and new CLIArgs structure
 '''
 
 import pytest
@@ -15,30 +15,33 @@ class TestArgparser:
 
 
     def test_no_input(self):
-        """ Tests the edge case of no argument given as input. The argparse library should be handling this as SystemExit """
+        """ Tests the edge case of no argument given as input. Should raise SystemExit """
         with pytest.raises(SystemExit) as excinfo:
-                cli.argparser(None)  # the function ignores its args parameter anyway
-
-            # argparse exits with code 2 on parsing errors
-        assert excinfo.value.code == 2
+            cli.argparser([])
+        # argparse exits with code 1 on no command
+        assert excinfo.value.code == 1
 
     def test_url_as_input(self):
-        """ Tests the proper usage of the function, an url should be passed through the function unscathed  """
-        assert cli.argparser([TestArgparser.well_formed_remax_url]).url == TestArgparser.well_formed_remax_url
+        """ Tests backward compatibility: URL as first positional arg becomes 'full' command """
+        result = cli.argparser([TestArgparser.well_formed_remax_url])
+        assert result.url == TestArgparser.well_formed_remax_url
+        assert result.command == 'full'
 
     def test_integer_as_input_typeerror(self):
-        """ An integer should raise a type error at argparser level. exit value 2 -> cli usage error """
-        arg = 0
-        with pytest.raises(TypeError) as excinfo:
-            cli.argparser([int(arg)])
+        """ An integer should raise a type error at argparser level """
+        with pytest.raises(TypeError):
+            cli.argparser([0])
     
     def test_string_as_input_valueerror(self):
-        """ All non well formed urls are not accepted, which extends to all strings other than urls """
-        arg = "some string"
-        with pytest.raises(ValueError) as excinfo:
-            cli.argparser([arg])
+        """ All non well formed urls are not accepted """
+        # With new CLI using subcommands, invalid input will cause SystemExit from argparse
+        with pytest.raises(SystemExit):
+            cli.argparser(["some string"])
 
     def test_output_type(self):
-        """ The result type of argparser should be argparse.Namespace """
-        assert type(cli.argparser([TestArgparser.well_formed_remax_url])) == cli.argparse.Namespace
-        
+        """ The result type of argparser should be CLIArgs """
+        result = cli.argparser([TestArgparser.well_formed_remax_url])
+        assert type(result) == cli.CLIArgs
+        assert hasattr(result, 'url')
+        assert hasattr(result, 'command')
+

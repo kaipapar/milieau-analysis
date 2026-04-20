@@ -36,13 +36,13 @@ class IO:
         return d
     
     def get_file(path: str):
-        path = pathlib.Path(path) #TODO refactoring str literal paths to Path type...
+        path = pathlib.Path(path)
+        if not path.exists():
+            return None
         try:
-            path.exists()
+            return open(path)
         except FileNotFoundError:
-            return
-        with open(path) as file:
-            return file
+            return None
                   
     def is_empty(filepath) -> bool:
         """ returns True if file is "empty" or doesn't exist. In use with crawler methods. """
@@ -93,7 +93,7 @@ class DF:
                 # Add identifiers to the row
                 item.attr_dict['siteID'] = site_id
                 item.attr_dict['sessionID'] = session_id
-                item.attr_dict['listingID'] = str(item.id)
+                item.attr_dict['listingID'] = int(item.id)
                 
                 df = DF.add_row(df, item.attr_dict)
             else:

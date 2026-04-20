@@ -16,7 +16,7 @@ class PropertySite(abc.ABC):
     php_query_url=""    # where the listinglist is accessed
     def __init__(self):
         self._listing_ids: set[int] = set()
-        self.listings: list[PropertySite.Listing] = []
+        self.listings: set[PropertySite.Listing] = set()
     
     class Listing:
         """ Information about specific listings """
@@ -66,7 +66,7 @@ class PropertySite(abc.ABC):
     def populate_listing_list(self,ids:set):
         """ generate listing objects and add them to listings """
         for item in ids:
-            self.listings.append(self.Listing(id=item))
+            self.listings.add(self.Listing(id=item))
 
 
     @abc.abstractmethod
