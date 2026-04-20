@@ -93,7 +93,7 @@ class DF:
                 # Add identifiers to the row
                 item.attr_dict['siteID'] = site_id
                 item.attr_dict['sessionID'] = session_id
-                item.attr_dict['listingID'] = item.id
+                item.attr_dict['listingID'] = str(item.id)
                 
                 df = DF.add_row(df, item.attr_dict)
             else:
