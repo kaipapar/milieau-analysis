@@ -86,18 +86,24 @@ class JsonParser:
 
     def gen_id_set(self) -> set:
         """ return set of property listing IDs from the php response json list.
-            They are used to generate urls. """
-        l = len(self.json_list)
-        i = 0
+            They are used to generate urls. 
+            Supports both list format [{}] and dict format {"key": {}}. """
         ids = set()
-        while (i < l):
-            n = self._get_id(i)
+        
+        # Handle both list format [{}] and dict format {"key": {}}
+        items = self.json_list.values() if isinstance(self.json_list, dict) else self.json_list
+        
+        for item in items:
+            # Extract identifier from the item
+            n = item.get("identifier") if isinstance(item, dict) else None
+            
             # validation
-            try:
-                n = int(n)
-            except ValueError:
-                warn(f"Invalid id found in json list: {n}, skipping...")
-            else:
-                ids.add(n)
-            i+=1
+            if n is not None:
+                try:
+                    n = int(n)
+                except ValueError:
+                    warn(f"Invalid id found in json list: {n}, skipping...")
+                else:
+                    ids.add(n)
+        
         return ids

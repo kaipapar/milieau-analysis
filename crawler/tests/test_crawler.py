@@ -263,18 +263,18 @@ class TestCrawler:
 
         def test_multiple_page_accumulation(self, tmp_path, parser):
             """ test that IDs are accumulated from multiple pages """
-            # Create page_0.html
+            # Create page_0.html (array format)
             page_0_data = [{"identifier": "100"}, {"identifier": "200"}]
             with open(tmp_path / "page_0.html", 'w') as f:
                 json.dump(page_0_data, f)
             
-            # Create page_1.html
-            page_1_data = [{"identifier": "300"}, {"identifier": "400"}]
+            # Create page_1.html (object format with numeric string keys, matching real data)
+            page_1_data = {"21": {"identifier": "300"}, "22": {"identifier": "400"}}
             with open(tmp_path / "page_1.html", 'w') as f:
                 json.dump(page_1_data, f)
             
-            # Create page_2.html
-            page_2_data = [{"identifier": "500"}]
+            # Create page_2.html (object format with numeric string keys, matching real data)
+            page_2_data = {"23": {"identifier": "500"}}
             with open(tmp_path / "page_2.html", 'w') as f:
                 json.dump(page_2_data, f)
 
@@ -286,12 +286,13 @@ class TestCrawler:
 
         def test_stops_at_missing_page(self, tmp_path, parser):
             """ test that iteration stops when a page file is missing """
-            # Create page_0.html and page_1.html but not page_2.html
+            # Create page_0.html (array format)
             page_0_data = [{"identifier": "111"}]
             with open(tmp_path / "page_0.html", 'w') as f:
                 json.dump(page_0_data, f)
             
-            page_1_data = [{"identifier": "222"}]
+            # Create page_1.html (object format with numeric string keys, matching real data)
+            page_1_data = {"21": {"identifier": "222"}}
             with open(tmp_path / "page_1.html", 'w') as f:
                 json.dump(page_1_data, f)
 
@@ -308,7 +309,8 @@ class TestCrawler:
             with open(tmp_path / "page_0.html", 'w') as f:
                 json.dump(page_0_data, f)
             
-            page_1_data = [{"identifier": "20"}]
+            # Create page_1.html with object format (matching real data)
+            page_1_data = {"21": {"identifier": "20"}}
             with open(tmp_path / "page_1.html", 'w') as f:
                 json.dump(page_1_data, f)
 
@@ -324,7 +326,7 @@ class TestCrawler:
 
         def test_handles_invalid_ids_per_page(self, tmp_path, parser):
             """ test that invalid IDs (non-integers) are skipped across pages """
-            # Create page_0.html with mixed valid/invalid IDs
+            # Create page_0.html with mixed valid/invalid IDs (array format)
             page_0_data = [
                 {"identifier": "100"},
                 {"identifier": "not_a_number"},
@@ -333,11 +335,11 @@ class TestCrawler:
             with open(tmp_path / "page_0.html", 'w') as f:
                 json.dump(page_0_data, f)
             
-            # Create page_1.html with more mixed data
-            page_1_data = [
-                {"identifier": "invalid"},
-                {"identifier": "300"}
-            ]
+            # Create page_1.html with object format and mixed data (matching real data)
+            page_1_data = {
+                "21": {"identifier": "invalid"},
+                "22": {"identifier": "300"}
+            }
             with open(tmp_path / "page_1.html", 'w') as f:
                 json.dump(page_1_data, f)
 
